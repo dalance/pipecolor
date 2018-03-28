@@ -1,7 +1,16 @@
 [package]
 name = "colored"
 version = "0.1.0"
-authors = ["hatta"]
+authors = ["dalance@gmail.com"]
+repository = "https://github.com/dalance/colored"
+categories = ["command-line-utilities"]
+license = "MIT"
+readme = "README.md"
+description = "A terminal filter for colored output"
+
+[badges]
+travis-ci = { repository = "dalance/colored" }
+codecov   = { repository = "dalance/colored", branch = "master", service = "github" }
 
 [dependencies]
 error-chain  = "0.11.0"
@@ -11,3 +20,10 @@ serde_derive = "1.0.33"
 structopt    = "0.2.5"
 termion      = "1.5.1"
 toml         = "0.4.5"
+
+[package.metadata.release]
+dev-version-ext            = "pre"
+pre-release-commit-message = "Prepare to v{{version}}"
+pro-release-commit-message = "Start next development iteration v{{version}}"
+tag-message                = "Bump version to {{version}}"
+tag-prefix                 = "v"
