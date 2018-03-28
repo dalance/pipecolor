@@ -8,8 +8,9 @@ extern crate termion;
 extern crate toml;
 
 use regex::Regex;
+use std::env::home_dir;
 use std::fs::File;
-use std::io::{stdin, BufRead, BufReader};
+use std::io::{stdin, BufRead, BufReader, Read};
 use std::path::{Path, PathBuf};
 use structopt::{clap, StructOpt};
 use termion::{color, style};
@@ -27,6 +28,10 @@ pub struct Opt {
     /// Files to show
     #[structopt(name = "FILE", parse(from_os_str))]
     pub files: Vec<PathBuf>,
+
+    /// Show verbose message
+    #[structopt(short = "v", long = "verbose")]
+    pub verbose: bool,
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -65,7 +70,6 @@ mod regex_serde {
         D: Deserializer<'de>,
     {
         let s = String::deserialize(deserializer)?;
-        println!("{}", s);
         let r = Regex::new(&s).map_err(serde::de::Error::custom)?;
         Ok(r)
     }
@@ -107,42 +111,18 @@ mod color_serde {
 
 pub static DEFAULT_FORMAT: &'static str = r#"
 [[formats]]
-    name = "Synopsys Frontend"
-    pat  = "(Design Compiler\\(R\\)|PrimeTime \\(R\\)|Formality \\(R\\))"
+    name = "Default"
+    pat  = ".*"
     [[formats.styles]]
-        pat             = "^Error:"
+        pat             = "Error"
         color_matched   = "LightRed"
         color_unmatched = "Red"
     [[formats.styles]]
-        pat             = "^Warning:"
+        pat             = "Warning"
         color_matched   = "LightYellow"
         color_unmatched = "Yellow"
     [[formats.styles]]
-        pat             = "^Information:"
-        color_matched   = "LightGreen"
-        color_unmatched = "Green"
-    [[formats.styles]]
-        pat             = "^Verification SUCCEEDED"
-        color_matched   = "LightGreen"
-        color_unmatched = "Green"
-    [[formats.styles]]
-        pat             = "^Verification FAILED"
-        color_matched   = "LightRed"
-        color_unmatched = "Red"
-
-[[formats]]
-    name = "VCS"
-    pat  = "Chronologic VCS \\(TM\\)"
-    [[formats.styles]]
-        pat             = "^Error-\\[.*\\]"
-        color_matched   = "LightRed"
-        color_unmatched = "Red"
-    [[formats.styles]]
-        pat             = "^Warning-\\[.*\\]"
-        color_matched   = "LightYellow"
-        color_unmatched = "Yellow"
-    [[formats.styles]]
-        pat             = "^Lint-\\[.*\\]"
+        pat             = "Info"
         color_matched   = "LightGreen"
         color_unmatched = "Green"
 "#;
@@ -164,14 +144,14 @@ fn get_reader_stdin() -> Box<BufRead> {
     Box::new(BufReader::new(stdin()))
 }
 
-fn output(mut reader: Box<BufRead>, formats: &Formats) {
+fn output(mut reader: Box<BufRead>, formats: &Formats, opt: &Opt) {
     let mut format = None;
     let mut s = String::new();
     loop {
         match reader.read_line(&mut s) {
             Ok(0) => break,
             Ok(_) => {
-                format = detect_format(&s, formats).or(format);
+                format = detect_format(&s, formats, opt).or(format);
                 if let Some(format) = format {
                     s = apply_style(s, &formats.formats[format]);
                 }
@@ -183,10 +163,13 @@ fn output(mut reader: Box<BufRead>, formats: &Formats) {
     }
 }
 
-fn detect_format(s: &str, formats: &Formats) -> Option<usize> {
+fn detect_format(s: &str, formats: &Formats, opt: &Opt) -> Option<usize> {
     for (i, format) in formats.formats.iter().enumerate() {
         let mat = format.pat.find(&s);
         if mat.is_some() {
+            if opt.verbose {
+                println!("colored: Format '{}' is detected", format.name);
+            }
             return Some(i);
         }
     }
@@ -229,22 +212,48 @@ fn apply_style(mut s: String, format: &Format) -> String {
     s
 }
 
+fn get_config_path() -> Option<PathBuf> {
+    match home_dir() {
+        Some(mut p) => {
+            p.push(".colored.toml");
+            if p.exists() {
+                Some(p)
+            } else {
+                None
+            }
+        }
+        None => None,
+    }
+}
+
 // -------------------------------------------------------------------------------------------------
 // Main
 // -------------------------------------------------------------------------------------------------
 
 fn main() {
     let opt = Opt::from_args();
+    let config = get_config_path();
 
-    let formats: Formats = toml::from_str(DEFAULT_FORMAT).unwrap();
+    let formats: Formats = match config {
+        Some(c) => {
+            if opt.verbose {
+                println!("colored: Read config from '{}'", c.to_string_lossy());
+            }
+            let mut f = File::open(&c).unwrap();
+            let mut s = String::new();
+            let _ = f.read_to_string(&mut s);
+            toml::from_str(&s).unwrap()
+        }
+        None => toml::from_str(DEFAULT_FORMAT).unwrap(),
+    };
 
     if opt.files.is_empty() {
         let reader = get_reader_stdin();
-        output(reader, &formats);
+        output(reader, &formats, &opt);
     } else {
-        for f in opt.files {
+        for f in &opt.files {
             let reader = get_reader_file(&f);
-            output(reader, &formats);
+            output(reader, &formats, &opt);
         }
     };
 }
