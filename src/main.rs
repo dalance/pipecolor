@@ -39,6 +39,10 @@ pub struct Opt {
     #[structopt(short = "f", long = "format")]
     pub formats: Vec<String>,
 
+    /// Connect to the specific process
+    #[structopt(short = "p", long = "pid")]
+    pub pid: Option<usize>,
+
     /// Show verbose message
     #[structopt(short = "v", long = "verbose")]
     pub verbose: bool,
