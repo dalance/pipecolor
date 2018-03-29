@@ -157,6 +157,7 @@ pub static DEFAULT_CONFIG: &'static str = r#"
 error_chain! {
     foreign_links {
         Io(::std::io::Error);
+        Toml(::toml::de::Error);
     }
 }
 
@@ -164,13 +165,13 @@ error_chain! {
 // Functions
 // -------------------------------------------------------------------------------------------------
 
-fn get_reader_file(path: &Path) -> Box<BufRead> {
-    let f = File::open(path).unwrap();
-    Box::new(BufReader::new(f))
+fn get_reader_file(path: &Path) -> Result<Box<BufRead>> {
+    let f = File::open(path).chain_err(|| format!("failed to open '{}'", path.to_string_lossy()))?;
+    Ok(Box::new(BufReader::new(f)))
 }
 
-fn get_reader_stdin() -> Box<BufRead> {
-    Box::new(BufReader::new(stdin()))
+fn get_reader_stdin() -> Result<Box<BufRead>> {
+    Ok(Box::new(BufReader::new(stdin())))
 }
 
 fn output(mut reader: Box<BufRead>, config: &Config, opt: &Opt) {
@@ -268,7 +269,9 @@ fn get_config_path() -> Option<PathBuf> {
 // Main
 // -------------------------------------------------------------------------------------------------
 
-fn main() {
+quick_main!(run);
+
+fn run() -> Result<()> {
     let opt = Opt::from_args();
     let config = get_config_path();
 
@@ -277,23 +280,25 @@ fn main() {
             if opt.verbose {
                 println!("pipecolor: Read config from '{}'", c.to_string_lossy());
             }
-            let mut f = File::open(&c).unwrap();
+            let mut f = File::open(&c).chain_err(|| format!("failed to open '{}'", c.to_string_lossy()))?;
             let mut s = String::new();
             let _ = f.read_to_string(&mut s);
-            toml::from_str(&s).unwrap()
+            toml::from_str(&s).chain_err(|| format!("failed to parse toml '{}'", c.to_string_lossy()))?
         }
         None => toml::from_str(DEFAULT_CONFIG).unwrap(),
     };
 
     if opt.files.is_empty() {
-        let reader = get_reader_stdin();
+        let reader = get_reader_stdin()?;
         output(reader, &config, &opt);
     } else {
         for f in &opt.files {
-            let reader = get_reader_file(&f);
+            let reader = get_reader_file(&f)?;
             output(reader, &config, &opt);
         }
     };
+
+    Ok(())
 }
 
 // -------------------------------------------------------------------------------------------------
