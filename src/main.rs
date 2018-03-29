@@ -1,3 +1,5 @@
+#[macro_use]
+extern crate error_chain;
 extern crate regex;
 extern crate serde;
 #[macro_use]
@@ -17,7 +19,7 @@ use termion::{color, style};
 use termion::color::Color;
 
 // -------------------------------------------------------------------------------------------------
-// Options
+// Option
 // -------------------------------------------------------------------------------------------------
 
 #[derive(Debug, StructOpt)]
@@ -29,17 +31,25 @@ pub struct Opt {
     #[structopt(name = "FILE", parse(from_os_str))]
     pub files: Vec<PathBuf>,
 
+    /// Config file
+    #[structopt(short = "c", long = "config", parse(from_os_str))]
+    pub config: Option<PathBuf>,
+
+    /// Apply the specific format only
+    #[structopt(short = "f", long = "format")]
+    pub formats: Vec<String>,
+
     /// Show verbose message
     #[structopt(short = "v", long = "verbose")]
     pub verbose: bool,
 }
 
 // -------------------------------------------------------------------------------------------------
-// Formats
+// Config
 // -------------------------------------------------------------------------------------------------
 
 #[derive(Deserialize)]
-pub struct Formats {
+pub struct Config {
     pub formats: Vec<Format>,
 }
 
@@ -49,16 +59,23 @@ pub struct Format {
 
     #[serde(with = "regex_serde")] pub pat: Regex,
 
-    pub styles: Vec<Style>,
+    pub lines: Vec<Line>,
 }
 
 #[derive(Deserialize)]
-pub struct Style {
+pub struct Line {
     #[serde(with = "regex_serde")] pub pat: Regex,
 
-    #[serde(with = "color_serde")] pub color_matched: Box<Color>,
+    #[serde(with = "color_serde")] pub color: Box<Color>,
 
-    #[serde(with = "color_serde")] pub color_unmatched: Box<Color>,
+    pub tokens: Vec<Token>,
+}
+
+#[derive(Deserialize)]
+pub struct Token {
+    #[serde(with = "regex_serde")] pub pat: Regex,
+
+    #[serde(with = "color_serde")] pub color: Box<Color>,
 }
 
 mod regex_serde {
@@ -109,27 +126,39 @@ mod color_serde {
     }
 }
 
-pub static DEFAULT_FORMAT: &'static str = r#"
+pub static DEFAULT_CONFIG: &'static str = r#"
 [[formats]]
     name = "Default"
     pat  = ".*"
-    [[formats.styles]]
-        pat             = "Error"
-        color_matched   = "LightRed"
-        color_unmatched = "Red"
-    [[formats.styles]]
-        pat             = "Warning"
-        color_matched   = "LightYellow"
-        color_unmatched = "Yellow"
-    [[formats.styles]]
-        pat             = "Info"
-        color_matched   = "LightGreen"
-        color_unmatched = "Green"
+    [[formats.lines]]
+        pat   = "Error"
+        color = "Red"
+        [[formats.lines.tokens]]
+            pat   = "Error"
+            color = "LightRed"
+    [[formats.lines]]
+        pat   = "Warning"
+        color = "Yellow"
+        [[formats.lines.tokens]]
+            pat   = "Warning"
+            color = "LightYellow"
+    [[formats.lines]]
+        pat   = "Info"
+        color = "Green"
+        [[formats.lines.tokens]]
+            pat   = "Info"
+            color = "LightGreen"
 "#;
 
 // -------------------------------------------------------------------------------------------------
 // Error
 // -------------------------------------------------------------------------------------------------
+
+error_chain! {
+    foreign_links {
+        Io(::std::io::Error);
+    }
+}
 
 // -------------------------------------------------------------------------------------------------
 // Functions
@@ -144,16 +173,16 @@ fn get_reader_stdin() -> Box<BufRead> {
     Box::new(BufReader::new(stdin()))
 }
 
-fn output(mut reader: Box<BufRead>, formats: &Formats, opt: &Opt) {
+fn output(mut reader: Box<BufRead>, config: &Config, opt: &Opt) {
     let mut format = None;
     let mut s = String::new();
     loop {
         match reader.read_line(&mut s) {
             Ok(0) => break,
             Ok(_) => {
-                format = detect_format(&s, formats, opt).or(format);
+                format = detect_format(&s, config, opt).or(format);
                 if let Some(format) = format {
-                    s = apply_style(s, &formats.formats[format]);
+                    s = apply_style(s, &config.formats[format]);
                 }
                 print!("{}", s);
                 s.clear();
@@ -163,8 +192,8 @@ fn output(mut reader: Box<BufRead>, formats: &Formats, opt: &Opt) {
     }
 }
 
-fn detect_format(s: &str, formats: &Formats, opt: &Opt) -> Option<usize> {
-    for (i, format) in formats.formats.iter().enumerate() {
+fn detect_format(s: &str, config: &Config, opt: &Opt) -> Option<usize> {
+    for (i, format) in config.formats.iter().enumerate() {
         let mat = format.pat.find(&s);
         if mat.is_some() {
             if opt.verbose {
@@ -177,33 +206,42 @@ fn detect_format(s: &str, formats: &Formats, opt: &Opt) -> Option<usize> {
 }
 
 fn apply_style(mut s: String, format: &Format) -> String {
-    let mut mat_str: Option<String> = None;
-    let mut mat_idx = 0;
+    let mut mat_idx = None;
     {
-        for (i, style) in format.styles.iter().enumerate() {
-            let mat = style.pat.find(&s);
-            if let Some(mat) = mat {
-                mat_str = Some(String::from(mat.as_str()));
-                mat_idx = i;
+        for (i, line) in format.lines.iter().enumerate() {
+            let mat = line.pat.find(&s);
+            if mat.is_some() {
+                mat_idx = Some(i);
                 break;
             }
         }
     }
 
-    if let Some(mat_str) = mat_str {
-        let mat_style = &format.styles[mat_idx];
-        s = s.replace(
-            &mat_str,
-            &format!(
-                "{}{}{}",
-                color::Fg(&*mat_style.color_matched),
-                mat_str,
-                color::Fg(&*mat_style.color_unmatched)
-            ),
-        );
+    if let Some(mat_idx) = mat_idx {
+        let mat_line = &format.lines[mat_idx];
+        for token in &mat_line.tokens {
+            let mut mat_str = None;
+            {
+                let mat = token.pat.find(&s);
+                if let Some(mat) = mat {
+                    mat_str = Some(String::from(mat.as_str()));
+                }
+            }
+            if let Some(mat_str) = mat_str {
+                s = s.replace(
+                    &mat_str,
+                    &format!(
+                        "{}{}{}",
+                        color::Fg(&*token.color),
+                        mat_str,
+                        color::Fg(&*mat_line.color)
+                        ),
+                );
+            }
+        }
         s = format!(
             "{}{}{}",
-            color::Fg(&*mat_style.color_unmatched),
+            color::Fg(&*mat_line.color),
             s,
             style::Reset
         );
@@ -234,7 +272,7 @@ fn main() {
     let opt = Opt::from_args();
     let config = get_config_path();
 
-    let formats: Formats = match config {
+    let config: Config = match config {
         Some(c) => {
             if opt.verbose {
                 println!("pipecolor: Read config from '{}'", c.to_string_lossy());
@@ -244,16 +282,16 @@ fn main() {
             let _ = f.read_to_string(&mut s);
             toml::from_str(&s).unwrap()
         }
-        None => toml::from_str(DEFAULT_FORMAT).unwrap(),
+        None => toml::from_str(DEFAULT_CONFIG).unwrap(),
     };
 
     if opt.files.is_empty() {
         let reader = get_reader_stdin();
-        output(reader, &formats, &opt);
+        output(reader, &config, &opt);
     } else {
         for f in &opt.files {
             let reader = get_reader_file(&f);
-            output(reader, &formats, &opt);
+            output(reader, &config, &opt);
         }
     };
 }
