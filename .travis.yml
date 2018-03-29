@@ -30,9 +30,9 @@ deploy:
   provider: releases
   api_key:
     secure: GIA3qSX9T59VVNzdlv/SdAHB3xk8eYdFhhLOJIe1wivV3+ZeCgwK/47dN5jiNvXfIXnLNh/7dzmwHo4d3gSlMISSNhCYfnQt2w4JD5gMfaSesIh1I+kZEzcFF/feePornH26xF+/vgc4hR4eDo22zYWlU5V5oXez5dEUQHFprTpfFtadZMri0nbbeLhP3X6DkzZWc0mUSO0nTN+dVZtTq6zNfn4nqFQiXNDY3pvAPPpOC74ycZ2wJmf/+X2Dmbo9TjC0GRB6i+Te48+K+jbvv61Hx0E2u9JFCpTUmA7/wWvwYM9tLTThWBM9jl0IOPfDtiF1SSFwD0+1CcPxmb+fXN5znHXbrcLC9qC0iNlHwRlsCw9nDHJVi49t6BmkP3ZKeTQ9+bukycCeTu2vQchY/OyV+WVtqj0BVWWDzcVk7gn4ZLbOVtPeqp1gIbVHmgPG+JHPcFyfDcVpCD/bsEhsiezRmZaeYwfVNRycXW7vkfzBRD4eb0LiURLgE/FQjchB04C46rPOJiG2Dk77ireDK9q0ZRAzv7bNJsrzRXRAbkYMHhSW2/sdKnbn/2ueajPKiYzTdzgQnSV5INA3ghSdveLh05TUIoAZrEB324sWFhLSqIC8bJffeVpX6igjyP6McKlXmRpvMylvxJKV9qbSrRX2ynTlKKjGw4SxOzFUdno=
-  file: colored*.zip
+  file: pipecolor*.zip
   file_glob: true
   skip_cleanup: true
   on:
-    repo: dalance/colored
+    repo: dalance/pipecolor
     tags: true

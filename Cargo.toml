@@ -1,16 +1,16 @@
 [package]
-name = "colored"
+name = "pipecolor"
 version = "0.1.0"
 authors = ["dalance@gmail.com"]
-repository = "https://github.com/dalance/colored"
+repository = "https://github.com/dalance/pipecolor"
 categories = ["command-line-utilities"]
 license = "MIT"
 readme = "README.md"
 description = "A terminal filter for colored output"
 
 [badges]
-travis-ci = { repository = "dalance/colored" }
-codecov   = { repository = "dalance/colored", branch = "master", service = "github" }
+travis-ci = { repository = "dalance/pipecolor" }
+codecov   = { repository = "dalance/pipecolor", branch = "master", service = "github" }
 
 [dependencies]
 error-chain  = "0.11.0"

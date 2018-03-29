@@ -21,7 +21,7 @@ use termion::color::Color;
 // -------------------------------------------------------------------------------------------------
 
 #[derive(Debug, StructOpt)]
-#[structopt(name = "colored")]
+#[structopt(name = "pipecolor")]
 #[structopt(raw(long_version = "option_env!(\"LONG_VERSION\").unwrap_or(env!(\"CARGO_PKG_VERSION\"))"))]
 #[structopt(raw(setting = "clap::AppSettings::ColoredHelp"))]
 pub struct Opt {
@@ -168,7 +168,7 @@ fn detect_format(s: &str, formats: &Formats, opt: &Opt) -> Option<usize> {
         let mat = format.pat.find(&s);
         if mat.is_some() {
             if opt.verbose {
-                println!("colored: Format '{}' is detected", format.name);
+                println!("pipecolor: Format '{}' is detected", format.name);
             }
             return Some(i);
         }
@@ -215,7 +215,7 @@ fn apply_style(mut s: String, format: &Format) -> String {
 fn get_config_path() -> Option<PathBuf> {
     match home_dir() {
         Some(mut p) => {
-            p.push(".colored.toml");
+            p.push(".pipecolor.toml");
             if p.exists() {
                 Some(p)
             } else {
@@ -237,7 +237,7 @@ fn main() {
     let formats: Formats = match config {
         Some(c) => {
             if opt.verbose {
-                println!("colored: Read config from '{}'", c.to_string_lossy());
+                println!("pipecolor: Read config from '{}'", c.to_string_lossy());
             }
             let mut f = File::open(&c).unwrap();
             let mut s = String::new();
