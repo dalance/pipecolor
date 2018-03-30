@@ -27,6 +27,8 @@ cargo install pipecolor
 $ cat sample/access_log | pipecolor -c ./sample/pipecolor.toml
 ```
 
+<a><img src="https://raw.githubusercontent.com/dalance/pipecolor/master/sample/access_log.svg"/></a>
+
 Filenames can be specified.
 
 ```
@@ -72,7 +74,9 @@ By this, some colorize rules can be switched dynamically.
 
 `formats.lines.pat` is a regular expression to specify colorize lines.
 If the expression is matched, the matched line is colorize to colors specified by `formats.lines.colors`.
+
 `formats.lines.colors` is an array of colors, the first color is used to colorize the whole line.
 The rest colors are used to colorize the captured group in the expression.
 In the example, the whole line is colorized to `White`, the first group captured by `(.*?)` is colorized to `LightGreen`.
+
 `formats.lines.tokens` specifies the special tokens to be colorized in the matched line.
