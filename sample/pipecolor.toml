@@ -1,0 +1,25 @@
+[[formats]]
+    name = "httpd"
+    pat  = "^(.*?) .*? .*? \\[(.*?)\\] \"(.*?)\" (.*?) .*? \"(.*?)\" \"(.*?)\""
+    [[formats.lines]]
+        pat  = "^(.*?) .*? .*? \\[(.*?)\\] \".*?\" .*? .*? \".*?\" \"(.*?)\""
+        colors = ["White", "LightGreen", "LightBlue", "Green"]
+        [[formats.lines.tokens]]
+            pat   = "GET"
+            colors = ["LightCyan"]
+        [[formats.lines.tokens]]
+            pat   = "POST"
+            colors = ["LightYellow"]
+        [[formats.lines.tokens]]
+            pat   = "HEAD"
+            colors = ["LightMagenta"]
+
+[[formats]]
+    name = "postfix/dovecot"
+    pat  = "^(.{3} [0-9]{2} [0-9:]{8}) (.*?) (postfix/.*?\\[.*?\\]|dovecot):.*"
+    [[formats.lines]]
+        pat  = "^(.{3} [0-9]{2} [0-9:]{8}) (.*?) (postfix/.*?\\[.*?\\]|dovecot):.*"
+        colors = ["White", "LightGreen", "Green", "LightBlue"]
+        [[formats.lines.tokens]]
+            pat   = "error"
+            colors = ["LightRed"]

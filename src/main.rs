@@ -12,10 +12,10 @@ extern crate toml;
 use regex::Regex;
 use std::env::home_dir;
 use std::fs::File;
-use std::io::{stdin, BufRead, BufReader, Read};
+use std::io::{stdin, stdout, BufRead, BufReader, BufWriter, Read, Write};
 use std::path::{Path, PathBuf};
 use structopt::{clap, StructOpt};
-use termion::{color, style};
+use termion::color;
 use termion::color::Color;
 
 // -------------------------------------------------------------------------------------------------
@@ -70,7 +70,7 @@ pub struct Format {
 pub struct Line {
     #[serde(with = "regex_serde")] pub pat: Regex,
 
-    #[serde(with = "color_serde")] pub color: Box<Color>,
+    pub colors: Vec<String>,
 
     pub tokens: Vec<Token>,
 }
@@ -79,7 +79,8 @@ pub struct Line {
 pub struct Token {
     #[serde(with = "regex_serde")] pub pat: Regex,
 
-    #[serde(with = "color_serde")] pub color: Box<Color>,
+    pub colors: Vec<String>,
+
 }
 
 mod regex_serde {
@@ -96,62 +97,22 @@ mod regex_serde {
     }
 }
 
-mod color_serde {
-    use serde::{self, Deserialize, Deserializer};
-    use termion::color::{self, Color};
-
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<Box<Color>, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let s = String::deserialize(deserializer)?;
-        match s.as_ref() {
-            "Black" => Ok(Box::new(color::Black)),
-            "Blue" => Ok(Box::new(color::Blue)),
-            "Cyan" => Ok(Box::new(color::Cyan)),
-            "Green" => Ok(Box::new(color::Green)),
-            "LightBlack" => Ok(Box::new(color::LightBlack)),
-            "LightBlue" => Ok(Box::new(color::LightBlue)),
-            "LightCyan" => Ok(Box::new(color::LightCyan)),
-            "LightGreen" => Ok(Box::new(color::LightGreen)),
-            "LightMagenta" => Ok(Box::new(color::LightMagenta)),
-            "LightRed" => Ok(Box::new(color::LightRed)),
-            "LightWhite" => Ok(Box::new(color::LightWhite)),
-            "LightYellow" => Ok(Box::new(color::LightYellow)),
-            "Magenta" => Ok(Box::new(color::Magenta)),
-            "Red" => Ok(Box::new(color::Red)),
-            "White" => Ok(Box::new(color::White)),
-            "Yellow" => Ok(Box::new(color::Yellow)),
-            x => Err(serde::de::Error::custom(format!(
-                "failed to parse color '{}'",
-                x
-            ))),
-        }
-    }
-}
-
 pub static DEFAULT_CONFIG: &'static str = r#"
 [[formats]]
     name = "Default"
     pat  = ".*"
     [[formats.lines]]
-        pat   = "Error"
-        color = "Red"
-        [[formats.lines.tokens]]
-            pat   = "Error"
-            color = "LightRed"
+        pat   = "(Error).*"
+        colors = ["Red", "LightRed"]
+        tokens = []
     [[formats.lines]]
-        pat   = "Warning"
-        color = "Yellow"
-        [[formats.lines.tokens]]
-            pat   = "Warning"
-            color = "LightYellow"
+        pat   = "(Warning).*"
+        colors = ["Yellow", "LightYellow"]
+        tokens = []
     [[formats.lines]]
-        pat   = "Info"
-        color = "Green"
-        [[formats.lines.tokens]]
-            pat   = "Info"
-            color = "LightGreen"
+        pat   = "(Info).*"
+        colors = ["Green", "LightGreen"]
+        tokens = []
 "#;
 
 // -------------------------------------------------------------------------------------------------
@@ -178,7 +139,7 @@ fn get_reader_stdin() -> Result<Box<BufRead>> {
     Ok(Box::new(BufReader::new(stdin())))
 }
 
-fn output(mut reader: Box<BufRead>, config: &Config, opt: &Opt) {
+fn output(reader: &mut BufRead, writer: &mut Write, config: &Config, opt: &Opt) {
     let mut format = None;
     let mut s = String::new();
     loop {
@@ -189,7 +150,8 @@ fn output(mut reader: Box<BufRead>, config: &Config, opt: &Opt) {
                 if let Some(format) = format {
                     s = apply_style(s, &config.formats[format]);
                 }
-                print!("{}", s);
+                let _ = writer.write(s.as_bytes());
+                //let _ = writer.flush();
                 s.clear();
             }
             Err(_) => break,
@@ -211,62 +173,96 @@ fn detect_format(s: &str, config: &Config, opt: &Opt) -> Option<usize> {
 }
 
 fn apply_style(mut s: String, format: &Format) -> String {
-    let mut mat_idx = None;
-    {
-        for (i, line) in format.lines.iter().enumerate() {
-            let mat = line.pat.find(&s);
-            if mat.is_some() {
-                mat_idx = Some(i);
-                break;
-            }
-        }
+
+    #[derive(Debug)]
+    enum PosType {
+        Start,
+        End,
     }
 
-    if let Some(mat_idx) = mat_idx {
-        let mat_line = &format.lines[mat_idx];
-        for token in &mat_line.tokens {
-            let mut mat_str = None;
-            {
-                let mat = token.pat.find(&s);
+    let mut pos = Vec::new();
+
+    for line in &format.lines {
+        let cap = line.pat.captures(&s);
+        if let Some(cap) = cap {
+            for (j, mat) in cap.iter().enumerate() {
                 if let Some(mat) = mat {
-                    mat_str = Some(String::from(mat.as_str()));
+                    pos.push((PosType::Start, mat.start(), line.colors[j].clone()));
+                    pos.push((PosType::End, mat.end(), line.colors[j].clone()));
                 }
             }
-            if let Some(mat_str) = mat_str {
-                s = s.replace(
-                    &mat_str,
-                    &format!(
-                        "{}{}{}",
-                        color::Fg(&*token.color),
-                        mat_str,
-                        color::Fg(&*mat_line.color)
-                        ),
-                );
+            for token in &line.tokens {
+                let cap = token.pat.captures(&s);
+                if let Some(cap) = cap {
+                    for (j, mat) in cap.iter().enumerate() {
+                        if let Some(mat) = mat {
+                            pos.push((PosType::Start, mat.start(), token.colors[j].clone()));
+                            pos.push((PosType::End, mat.end(), token.colors[j].clone()));
+                        }
+                    }
+                }
             }
+            break;
         }
-        s = format!(
-            "{}{}{}",
-            color::Fg(&*mat_line.color),
-            s,
-            style::Reset
-        );
     }
 
-    s
+    pos.sort_by_key( |&(_, p, _)| p);
+
+    let mut current_color = vec![String::from("Default")];
+    let mut ret = String::new();
+    let mut idx = 0;
+    for ( t, p, color ) in pos {
+        match t {
+            PosType::Start => { current_color.push(color); }
+            PosType::End => { current_color.pop(); }
+        }
+        let rest = s.split_off(p-idx);
+
+        ret.push_str(&format!("{}{}", s, color::Fg(&*conv_color(&current_color.last()))));
+        idx += s.len();
+        s = rest;
+    }
+
+    ret.push_str(&s);
+    ret
 }
 
-fn get_config_path() -> Option<PathBuf> {
-    match home_dir() {
-        Some(mut p) => {
-            p.push(".pipecolor.toml");
-            if p.exists() {
-                Some(p)
-            } else {
-                None
-            }
+fn conv_color(s: &Option<&String>) -> Box<Color> {
+    if let &Some(ref s) = s {
+        match s.as_ref() {
+            "Black" => Box::new(color::Black),
+            "Blue" => Box::new(color::Blue),
+            "Cyan" => Box::new(color::Cyan),
+            "Green" => Box::new(color::Green),
+            "LightBlack" => Box::new(color::LightBlack),
+            "LightBlue" => Box::new(color::LightBlue),
+            "LightCyan" => Box::new(color::LightCyan),
+            "LightGreen" => Box::new(color::LightGreen),
+            "LightMagenta" => Box::new(color::LightMagenta),
+            "LightRed" => Box::new(color::LightRed),
+            "LightWhite" => Box::new(color::LightWhite),
+            "LightYellow" => Box::new(color::LightYellow),
+            "Magenta" => Box::new(color::Magenta),
+            "Red" => Box::new(color::Red),
+            "White" => Box::new(color::White),
+            "Yellow" => Box::new(color::Yellow),
+            _ => Box::new(color::Reset),
         }
-        None => None,
+    } else {
+        Box::new(color::Reset)
     }
+}
+
+fn get_config_path(opt: &Opt) -> Option<PathBuf> {
+    if let Some(ref p) = opt.config {
+        return Some(p.clone());
+    } else if let Some(mut p) = home_dir() {
+        p.push(".pipecolor.toml");
+        if p.exists() {
+            return Some(p);
+        }
+    }
+    None
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -277,28 +273,36 @@ quick_main!(run);
 
 fn run() -> Result<()> {
     let opt = Opt::from_args();
-    let config = get_config_path();
+    run_opt(&opt)
+}
+
+fn run_opt(opt: &Opt) -> Result<()> {
+    let config = get_config_path(opt);
 
     let config: Config = match config {
         Some(c) => {
             if opt.verbose {
                 println!("pipecolor: Read config from '{}'", c.to_string_lossy());
             }
-            let mut f = File::open(&c).chain_err(|| format!("failed to open '{}'", c.to_string_lossy()))?;
+            let mut f =
+                File::open(&c).chain_err(|| format!("failed to open '{}'", c.to_string_lossy()))?;
             let mut s = String::new();
             let _ = f.read_to_string(&mut s);
-            toml::from_str(&s).chain_err(|| format!("failed to parse toml '{}'", c.to_string_lossy()))?
+            toml::from_str(&s)
+                .chain_err(|| format!("failed to parse toml '{}'", c.to_string_lossy()))?
         }
         None => toml::from_str(DEFAULT_CONFIG).unwrap(),
     };
 
+    let mut writer = BufWriter::new(stdout());
+
     if opt.files.is_empty() {
-        let reader = get_reader_stdin()?;
-        output(reader, &config, &opt);
+        let mut reader = get_reader_stdin()?;
+        output(&mut *reader, writer.get_mut(), &config, &opt);
     } else {
         for f in &opt.files {
-            let reader = get_reader_file(&f)?;
-            output(reader, &config, &opt);
+            let mut reader = get_reader_file(&f)?;
+            output(&mut *reader, writer.get_mut(), &config, &opt);
         }
     };
 
@@ -308,3 +312,24 @@ fn run() -> Result<()> {
 // -------------------------------------------------------------------------------------------------
 // Test
 // -------------------------------------------------------------------------------------------------
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_run() {
+        let args = vec!["pipecolor", "-c", "sample/pipecolor.toml", "sample/access_log", "sample/maillog"];
+        let opt = Opt::from_iter(args.iter());
+        let ret = run_opt(&opt);
+        assert!(ret.is_ok());
+    }
+
+    #[test]
+    fn test_config() {
+        let args = vec!["pipecolor", "-c", "test", "sample/access_log"];
+        let opt = Opt::from_iter(args.iter());
+        let ret = run_opt(&opt);
+        assert!(ret.is_err());
+    }
+}
