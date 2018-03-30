@@ -35,14 +35,6 @@ pub struct Opt {
     #[structopt(short = "c", long = "config", parse(from_os_str))]
     pub config: Option<PathBuf>,
 
-    /// Apply the specific format only
-    #[structopt(short = "f", long = "format")]
-    pub formats: Vec<String>,
-
-    /// Connect to the specific process
-    #[structopt(short = "p", long = "pid")]
-    pub pid: Option<usize>,
-
     /// Show verbose message
     #[structopt(short = "v", long = "verbose")]
     pub verbose: bool,
@@ -326,7 +318,7 @@ mod tests {
     }
 
     #[test]
-    fn test_config() {
+    fn test_read_config_fail() {
         let args = vec!["pipecolor", "-c", "test", "sample/access_log"];
         let opt = Opt::from_iter(args.iter());
         let ret = run_opt(&opt);
