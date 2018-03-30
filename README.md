@@ -27,7 +27,7 @@ cargo install pipecolor
 $ cat sample/access_log | pipecolor -c ./sample/pipecolor.toml
 ```
 
-<a><img src="https://raw.githubusercontent.com/dalance/pipecolor/master/sample/access_log.svg"/></a>
+<a><img src="https://rawgit.com/dalance/pipecolor/master/sample/access_log.svg"/></a>
 
 Filenames can be specified.
 
