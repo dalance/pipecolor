@@ -53,14 +53,16 @@ pub struct Config {
 pub struct Format {
     pub name: String,
 
-    #[serde(with = "regex_serde")] pub pat: Regex,
+    #[serde(with = "regex_serde")]
+    pub pat: Regex,
 
     pub lines: Vec<Line>,
 }
 
 #[derive(Deserialize)]
 pub struct Line {
-    #[serde(with = "regex_serde")] pub pat: Regex,
+    #[serde(with = "regex_serde")]
+    pub pat: Regex,
 
     pub colors: Vec<String>,
 
@@ -69,10 +71,10 @@ pub struct Line {
 
 #[derive(Deserialize)]
 pub struct Token {
-    #[serde(with = "regex_serde")] pub pat: Regex,
+    #[serde(with = "regex_serde")]
+    pub pat: Regex,
 
     pub colors: Vec<String>,
-
 }
 
 mod regex_serde {
@@ -165,7 +167,6 @@ fn detect_format(s: &str, config: &Config, opt: &Opt) -> Option<usize> {
 }
 
 fn apply_style(mut s: String, format: &Format) -> String {
-
     #[derive(Debug)]
     enum PosType {
         Start,
@@ -198,19 +199,27 @@ fn apply_style(mut s: String, format: &Format) -> String {
         }
     }
 
-    pos.sort_by_key( |&(_, p, _)| p);
+    pos.sort_by_key(|&(_, p, _)| p);
 
     let mut current_color = vec![String::from("Default")];
     let mut ret = String::new();
     let mut idx = 0;
-    for ( t, p, color ) in pos {
+    for (t, p, color) in pos {
         match t {
-            PosType::Start => { current_color.push(color); }
-            PosType::End => { current_color.pop(); }
+            PosType::Start => {
+                current_color.push(color);
+            }
+            PosType::End => {
+                current_color.pop();
+            }
         }
-        let rest = s.split_off(p-idx);
+        let rest = s.split_off(p - idx);
 
-        ret.push_str(&format!("{}{}", s, color::Fg(&*conv_color(&current_color.last()))));
+        ret.push_str(&format!(
+            "{}{}",
+            s,
+            color::Fg(&*conv_color(&current_color.last()))
+        ));
         idx += s.len();
         s = rest;
     }
@@ -345,7 +354,13 @@ D123 456 789 xyz
 
     #[test]
     fn test_run() {
-        let args = vec!["pipecolor", "-c", "sample/pipecolor.toml", "sample/access_log", "sample/maillog"];
+        let args = vec![
+            "pipecolor",
+            "-c",
+            "sample/pipecolor.toml",
+            "sample/access_log",
+            "sample/maillog",
+        ];
         let opt = Opt::from_iter(args.iter());
         let ret = run_opt(&opt);
         assert!(ret.is_ok());
@@ -353,7 +368,13 @@ D123 456 789 xyz
 
     #[test]
     fn test_verbose() {
-        let args = vec!["pipecolor", "-v", "-c", "sample/pipecolor.toml", "sample/access_log"];
+        let args = vec![
+            "pipecolor",
+            "-v",
+            "-c",
+            "sample/pipecolor.toml",
+            "sample/access_log",
+        ];
         let opt = Opt::from_iter(args.iter());
         let ret = run_opt(&opt);
         assert!(ret.is_ok());
@@ -376,7 +397,9 @@ D123 456 789 xyz
         let out = String::new();
         let mut writer = BufWriter::new(out.into_bytes());
         output(&mut reader, writer.get_mut(), &config, &opt);
-        assert_eq!(TEST_RESULT, &String::from_utf8(writer.get_ref().to_vec()).unwrap());
-
+        assert_eq!(
+            TEST_RESULT,
+            &String::from_utf8(writer.get_ref().to_vec()).unwrap()
+        );
     }
 }
