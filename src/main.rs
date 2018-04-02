@@ -310,6 +310,37 @@ fn run_opt(opt: &Opt) -> Result<()> {
 mod tests {
     use super::*;
 
+    pub static TEST_CONFIG: &'static str = r#"
+    [[formats]]
+        name = "Default"
+        pat  = ".*"
+        [[formats.lines]]
+            pat   = "A(.*) (.*) (.*)"
+            colors = ["Black", "Blue", "Cyan", "Default"]
+            [[formats.lines.tokens]]
+                pat   = "A"
+                colors = ["Green"]
+        [[formats.lines]]
+            pat   = "B(.*) (.*) (.*)"
+            colors = ["LightBlack", "LightBlue", "LightCyan", "LightGreen"]
+            tokens = []
+        [[formats.lines]]
+            pat   = "C(.*) (.*) (.*)"
+            colors = ["LightMagenta", "LightRed", "LightWhite", "LightYellow"]
+            tokens = []
+        [[formats.lines]]
+            pat   = "D(.*) (.*) (.*)"
+            colors = ["Magenta", "Red", "White", "Yellow"]
+            tokens = []
+    "#;
+
+    pub static TEST_DATA: &'static str = r#"
+A123 456 789 xyz
+B123 456 789 xyz
+C123 456 789 xyz
+D123 456 789 xyz
+    "#;
+
     #[test]
     fn test_run() {
         let args = vec!["pipecolor", "-c", "sample/pipecolor.toml", "sample/access_log", "sample/maillog"];
@@ -324,5 +355,15 @@ mod tests {
         let opt = Opt::from_iter(args.iter());
         let ret = run_opt(&opt);
         assert!(ret.is_err());
+    }
+
+    #[test]
+    fn test_output() {
+        let args = vec!["pipecolor"];
+        let opt = Opt::from_iter(args.iter());
+        let config: Config = toml::from_str(TEST_CONFIG).unwrap();
+        let mut reader = BufReader::new(TEST_DATA.as_bytes());
+        let mut writer = BufWriter::new(stdout());
+        output(&mut reader, writer.get_mut(), &config, &opt);
     }
 }
