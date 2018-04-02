@@ -19,6 +19,9 @@ Alternatively you can install by [cargo](https://crates.io).
 cargo install pipecolor
 ```
 
+Put the colorize rule file to `~/.pipecolor.toml`.
+`sample/pipecolor.toml` in this repository is an example.
+
 ## Usage
 
 **pipecolor** can receive input through pipe, and colorize the output.
@@ -36,8 +39,6 @@ $ pipecolor -c ./sample/pipecolor.toml sample/maillog
 ```
 
 <a><img src="https://rawgit.com/dalance/pipecolor/master/sample/maillog.svg"/></a>
-
-If `~/.pipecolor.toml` exists, it is read automatically.
 
 ### Colorize rule
 
