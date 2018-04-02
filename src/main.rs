@@ -341,9 +341,19 @@ C123 456 789 xyz
 D123 456 789 xyz
     "#;
 
+    pub static TEST_RESULT: &'static str = "\n\u{1b}[38;5;0m\u{1b}[38;5;2mA\u{1b}[38;5;4m\u{1b}[38;5;2m123 456\u{1b}[38;5;0m \u{1b}[38;5;6m789\u{1b}[38;5;0m \u{1b}[39mxyz\u{1b}[38;5;0m\u{1b}[39m\n\u{1b}[38;5;8mB\u{1b}[38;5;12m123 456\u{1b}[38;5;8m \u{1b}[38;5;14m789\u{1b}[38;5;8m \u{1b}[38;5;10mxyz\u{1b}[38;5;8m\u{1b}[39m\n\u{1b}[38;5;13mC\u{1b}[38;5;9m123 456\u{1b}[38;5;13m \u{1b}[38;5;15m789\u{1b}[38;5;13m \u{1b}[38;5;11mxyz\u{1b}[38;5;13m\u{1b}[39m\n\u{1b}[38;5;5mD\u{1b}[38;5;1m123 456\u{1b}[38;5;5m \u{1b}[38;5;7m789\u{1b}[38;5;5m \u{1b}[38;5;3mxyz\u{1b}[38;5;5m\u{1b}[39m\n    ";
+
     #[test]
     fn test_run() {
         let args = vec!["pipecolor", "-c", "sample/pipecolor.toml", "sample/access_log", "sample/maillog"];
+        let opt = Opt::from_iter(args.iter());
+        let ret = run_opt(&opt);
+        assert!(ret.is_ok());
+    }
+
+    #[test]
+    fn test_verbose() {
+        let args = vec!["pipecolor", "-v", "-c", "sample/pipecolor.toml", "sample/access_log"];
         let opt = Opt::from_iter(args.iter());
         let ret = run_opt(&opt);
         assert!(ret.is_ok());
@@ -363,7 +373,10 @@ D123 456 789 xyz
         let opt = Opt::from_iter(args.iter());
         let config: Config = toml::from_str(TEST_CONFIG).unwrap();
         let mut reader = BufReader::new(TEST_DATA.as_bytes());
-        let mut writer = BufWriter::new(stdout());
+        let out = String::new();
+        let mut writer = BufWriter::new(out.into_bytes());
         output(&mut reader, writer.get_mut(), &config, &opt);
+        assert_eq!(TEST_RESULT, &String::from_utf8(writer.get_ref().to_vec()).unwrap());
+
     }
 }
