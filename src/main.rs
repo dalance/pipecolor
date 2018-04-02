@@ -46,16 +46,6 @@ pub struct Opt {
 
 #[derive(Deserialize)]
 pub struct Config {
-    pub formats: Vec<Format>,
-}
-
-#[derive(Deserialize)]
-pub struct Format {
-    pub name: String,
-
-    #[serde(with = "regex_serde")]
-    pub pat: Regex,
-
     pub lines: Vec<Line>,
 }
 
@@ -92,21 +82,18 @@ mod regex_serde {
 }
 
 pub static DEFAULT_CONFIG: &'static str = r#"
-[[formats]]
-    name = "Default"
-    pat  = ".*"
-    [[formats.lines]]
-        pat   = "(Error).*"
-        colors = ["Red", "LightRed"]
-        tokens = []
-    [[formats.lines]]
-        pat   = "(Warning).*"
-        colors = ["Yellow", "LightYellow"]
-        tokens = []
-    [[formats.lines]]
-        pat   = "(Info).*"
-        colors = ["Green", "LightGreen"]
-        tokens = []
+[[lines]]
+    pat   = "(Error).*"
+    colors = ["Red", "LightRed"]
+    tokens = []
+[[lines]]
+    pat   = "(Warning).*"
+    colors = ["Yellow", "LightYellow"]
+    tokens = []
+[[lines]]
+    pat   = "(Info).*"
+    colors = ["Green", "LightGreen"]
+    tokens = []
 "#;
 
 // -------------------------------------------------------------------------------------------------
@@ -133,17 +120,13 @@ fn get_reader_stdin() -> Result<Box<BufRead>> {
     Ok(Box::new(BufReader::new(stdin())))
 }
 
-fn output(reader: &mut BufRead, writer: &mut Write, config: &Config, opt: &Opt) {
-    let mut format = None;
+fn output(reader: &mut BufRead, writer: &mut Write, config: &Config, _opt: &Opt) {
     let mut s = String::new();
     loop {
         match reader.read_line(&mut s) {
             Ok(0) => break,
             Ok(_) => {
-                format = detect_format(&s, config, opt).or(format);
-                if let Some(format) = format {
-                    s = apply_style(s, &config.formats[format]);
-                }
+                s = apply_style(s, &config);
                 let _ = writer.write(s.as_bytes());
                 //let _ = writer.flush();
                 s.clear();
@@ -153,20 +136,7 @@ fn output(reader: &mut BufRead, writer: &mut Write, config: &Config, opt: &Opt) 
     }
 }
 
-fn detect_format(s: &str, config: &Config, opt: &Opt) -> Option<usize> {
-    for (i, format) in config.formats.iter().enumerate() {
-        let mat = format.pat.find(&s);
-        if mat.is_some() {
-            if opt.verbose {
-                println!("pipecolor: Format '{}' is detected", format.name);
-            }
-            return Some(i);
-        }
-    }
-    None
-}
-
-fn apply_style(mut s: String, format: &Format) -> String {
+fn apply_style(mut s: String, config: &Config) -> String {
     #[derive(Debug)]
     enum PosType {
         Start,
@@ -175,7 +145,7 @@ fn apply_style(mut s: String, format: &Format) -> String {
 
     let mut pos = Vec::new();
 
-    for line in &format.lines {
+    for line in &config.lines {
         let cap = line.pat.captures(&s);
         if let Some(cap) = cap {
             for (j, mat) in cap.iter().enumerate() {
@@ -320,27 +290,24 @@ mod tests {
     use super::*;
 
     pub static TEST_CONFIG: &'static str = r#"
-    [[formats]]
-        name = "Default"
-        pat  = ".*"
-        [[formats.lines]]
-            pat   = "A(.*) (.*) (.*)"
-            colors = ["Black", "Blue", "Cyan", "Default"]
-            [[formats.lines.tokens]]
-                pat   = "A"
-                colors = ["Green"]
-        [[formats.lines]]
-            pat   = "B(.*) (.*) (.*)"
-            colors = ["LightBlack", "LightBlue", "LightCyan", "LightGreen"]
-            tokens = []
-        [[formats.lines]]
-            pat   = "C(.*) (.*) (.*)"
-            colors = ["LightMagenta", "LightRed", "LightWhite", "LightYellow"]
-            tokens = []
-        [[formats.lines]]
-            pat   = "D(.*) (.*) (.*)"
-            colors = ["Magenta", "Red", "White", "Yellow"]
-            tokens = []
+    [[lines]]
+        pat   = "A(.*) (.*) (.*)"
+        colors = ["Black", "Blue", "Cyan", "Default"]
+        [[lines.tokens]]
+            pat   = "A"
+            colors = ["Green"]
+    [[lines]]
+        pat   = "B(.*) (.*) (.*)"
+        colors = ["LightBlack", "LightBlue", "LightCyan", "LightGreen"]
+        tokens = []
+    [[lines]]
+        pat   = "C(.*) (.*) (.*)"
+        colors = ["LightMagenta", "LightRed", "LightWhite", "LightYellow"]
+        tokens = []
+    [[lines]]
+        pat   = "D(.*) (.*) (.*)"
+        colors = ["Magenta", "Red", "White", "Yellow"]
+        tokens = []
     "#;
 
     pub static TEST_DATA: &'static str = r#"

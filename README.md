@@ -46,46 +46,28 @@ $ pipecolor -c ./sample/pipecolor.toml sample/maillog
 See the example rule `sample/pipecolor.toml`.
 
 ```
-[[formats]]
-    name = "httpd"
-    pat  = "^(.*?) .*? .*? \\[(.*?)\\] \"(.*?)\" (.*?) .*? \"(.*?)\" \"(.*?)\""
-    [[formats.lines]]
-        pat  = "^(.*?) .*? .*? \\[(.*?)\\] \".*?\" .*? .*? \".*?\" \"(.*?)\""
-        colors = ["White", "LightGreen", "LightBlue", "Green"]
-        [[formats.lines.tokens]]
-            pat   = "GET"
-            colors = ["LightCyan"]
-        [[formats.lines.tokens]]
-            pat   = "POST"
-            colors = ["LightYellow"]
-        [[formats.lines.tokens]]
-            pat   = "HEAD"
-            colors = ["LightMagenta"]
+[[lines]]
+    pat  = "^(.*?) .*? .*? \\[(.*?)\\] \".*?\" .*? .*? \".*?\" \"(.*?)\""
+    colors = ["White", "LightGreen", "LightBlue", "Green"]
+    [[lines.tokens]]
+        pat   = "GET"
+        colors = ["LightCyan"]
+    [[lines.tokens]]
+        pat   = "POST"
+        colors = ["LightYellow"]
+    [[lines.tokens]]
+        pat   = "HEAD"
+        colors = ["LightMagenta"]
 ```
 
-`formats.pat` is a regular expression to specify a format start.
-By this, some colorize rules can be switched dynamically.
+`lines.pat` is a regular expression to specify colorize lines.
+If the expression is matched, the matched line is colorize to colors specified by `lines.colors`.
 
-```
-[[formats]]
-    name = "tool A"
-    pat  = "^tool A started"
-    ...
-
-[[formats]]
-    name = "tool B"
-    pat  = "^tool B started"
-    ...
-```
-
-`formats.lines.pat` is a regular expression to specify colorize lines.
-If the expression is matched, the matched line is colorize to colors specified by `formats.lines.colors`.
-
-`formats.lines.colors` is an array of colors, the first color is used to colorize the whole line.
+`lines.colors` is an array of colors, the first color is used to colorize the whole line.
 The rest colors are used to colorize the captured group in the expression.
 In the example, the whole line is colorized to `White`, the first group captured by `(.*?)` is colorized to `LightGreen`.
 
-`formats.lines.tokens` specifies the special tokens to be colorized in the matched line.
+`lines.tokens` specifies the special tokens to be colorized in the matched line.
 
 ### Available colors
 
