@@ -225,6 +225,7 @@ fn conv_color(s: &Option<&String>) -> Box<Color> {
             "Black" => Box::new(color::Black),
             "Blue" => Box::new(color::Blue),
             "Cyan" => Box::new(color::Cyan),
+            "Default" => Box::new(color::Reset),
             "Green" => Box::new(color::Green),
             "LightBlack" => Box::new(color::LightBlack),
             "LightBlue" => Box::new(color::LightBlue),
