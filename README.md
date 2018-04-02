@@ -32,8 +32,12 @@ $ cat sample/access_log | pipecolor -c ./sample/pipecolor.toml
 Filenames can be specified.
 
 ```
-$ pipecolor -c ./sample/pipecolor.toml sample/access_log
+$ pipecolor -c ./sample/pipecolor.toml sample/maillog
 ```
+
+<a><img src="https://rawgit.com/dalance/pipecolor/master/sample/maillog.svg"/></a>
+
+If `~/.pipecolor.toml` exists, it is read automatically.
 
 ### Colorize rule
 

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" 
+     xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="1000" height="220"
+     style='stroke-width: 0px; background-color: black;'
+>
+  <text font-size="10" x="10" y="20" style="fill: white;">
+    <tspan fill="chartreuse">Mar 25 04:17:30</tspan> <tspan fill="green">xxx</tspan> <tspan fill="cornflowerblue">postfix/smtpd[19644]</tspan>: connect from example.com[xxx.xxx.xx.xxx]
+  </text>
+  <text font-size="10" x="10" y="30" style="fill: white;">
+    <tspan fill="chartreuse">Mar 25 04:17:30</tspan> <tspan fill="green">xxx</tspan> <tspan fill="cornflowerblue">postfix/smtpd[19644]</tspan>: SSL_accept <tspan fill="red">error</tspan> from example.com[xxx.xxx.xx.xxx]: -1
+  </text>
+  <text font-size="10" x="10" y="40" style="fill: white;">
+    <tspan fill="chartreuse">Mar 25 04:17:30</tspan> <tspan fill="green">xxx</tspan> <tspan fill="cornflowerblue">postfix/smtpd[19644]</tspan>: lost connection after STARTTLS from example.com[xxx.xxx.xx.xxx]
+  </text>
+  <text font-size="10" x="10" y="50" style="fill: white;">
+    <tspan fill="chartreuse">Mar 25 04:17:30</tspan> <tspan fill="green">xxx</tspan> <tspan fill="cornflowerblue">postfix/smtpd[19644]</tspan>: disconnect from example.com[xxx.xxx.xx.xxx]
+  </text>
+  <text font-size="10" x="10" y="60" style="fill: white;">
+    <tspan fill="chartreuse">Mar 25 04:17:31</tspan> <tspan fill="green">xxx</tspan> <tspan fill="cornflowerblue">dovecot</tspan>: imap-login: Disconnected: rip=xxx.xxx.xx.xxx, lip=xxx.xx.xxx.xxx
+  </text>
+  <text font-size="10" x="10" y="70" style="fill: white;">
+    <tspan fill="chartreuse">Mar 25 04:17:45</tspan> <tspan fill="green">xxx</tspan> <tspan fill="cornflowerblue">postfix/smtpd[19644]</tspan>: connect from example.com[xxx.xxx.xx.xxx]
+  </text>
+  <text font-size="10" x="10" y="80" style="fill: white;">
+    <tspan fill="chartreuse">Mar 25 04:17:45</tspan> <tspan fill="green">xxx</tspan> <tspan fill="cornflowerblue">postfix/smtpd[19644]</tspan>: SSL_accept <tspan fill="red">error</tspan> from example.com[xxx.xxx.xx.xxx]: -1
+  </text>
+  <text font-size="10" x="10" y="90" style="fill: white;">
+    <tspan fill="chartreuse">Mar 25 04:17:45</tspan> <tspan fill="green">xxx</tspan> <tspan fill="cornflowerblue">postfix/smtpd[19644]</tspan>: lost connection after STARTTLS from example.com[xxx.xxx.xx.xxx]
+  </text>
+  <text font-size="10" x="10" y="100" style="fill: white;">
+    <tspan fill="chartreuse">Mar 25 04:17:45</tspan> <tspan fill="green">xxx</tspan> <tspan fill="cornflowerblue">postfix/smtpd[19644]</tspan>: disconnect from example.com[xxx.xxx.xx.xxx]
+  </text>
+  <text font-size="10" x="10" y="110" style="fill: white;">
+    <tspan fill="chartreuse">Mar 25 04:17:46</tspan> <tspan fill="green">xxx</tspan> <tspan fill="cornflowerblue">dovecot</tspan>: imap-login: Login: user=&lt;xxx&gt;, method=PLAIN, rip=xxx.xxx.xx.xx, lip=xxx.xx.xxx.xxx, TLS
+  </text>
+  <text font-size="10" x="10" y="120" style="fill: white;">
+    <tspan fill="chartreuse">Mar 25 04:17:46</tspan> <tspan fill="green">xxx</tspan> <tspan fill="cornflowerblue">dovecot</tspan>: imap-login: Disconnected: rip=xxx.xxx.xx.xxx, lip=xxx.xx.xxx.xxx
+  </text>
+  <text font-size="10" x="10" y="130" style="fill: white;">
+    <tspan fill="chartreuse">Mar 25 04:17:46</tspan> <tspan fill="green">xxx</tspan> <tspan fill="cornflowerblue">dovecot</tspan>: IMAP(xxx): Connection closed
+  </text>
+  <text font-size="10" x="10" y="140" style="fill: white;">
+    <tspan fill="chartreuse">Mar 25 04:18:00</tspan> <tspan fill="green">xxx</tspan> <tspan fill="cornflowerblue">postfix/smtpd[19644]</tspan>: connect from example.com[xxx.xxx.xx.xxx]
+  </text>
+  <text font-size="10" x="10" y="150" style="fill: white;">
+    <tspan fill="chartreuse">Mar 25 04:18:00</tspan> <tspan fill="green">xxx</tspan> <tspan fill="cornflowerblue">postfix/smtpd[19644]</tspan>: SSL_accept <tspan fill="red">error</tspan> from example.com[xxx.xxx.xx.xxx]: -1
+  </text>
+  <text font-size="10" x="10" y="160" style="fill: white;">
+    <tspan fill="chartreuse">Mar 25 04:18:00</tspan> <tspan fill="green">xxx</tspan> <tspan fill="cornflowerblue">postfix/smtpd[19644]</tspan>: lost connection after STARTTLS from example.com[xxx.xxx.xx.xxx]
+  </text>
+  <text font-size="10" x="10" y="170" style="fill: white;">
+    <tspan fill="chartreuse">Mar 25 04:18:00</tspan> <tspan fill="green">xxx</tspan> <tspan fill="cornflowerblue">postfix/smtpd[19644]</tspan>: disconnect from example.com[xxx.xxx.xx.xxx]
+  </text>
+  <text font-size="10" x="10" y="180" style="fill: white;">
+    <tspan fill="chartreuse">Mar 25 04:18:01</tspan> <tspan fill="green">xxx</tspan> <tspan fill="cornflowerblue">dovecot</tspan>: imap-login: Disconnected: rip=xxx.xxx.xx.xxx, lip=xxx.xx.xxx.xxx
+  </text>
+  <text font-size="10" x="10" y="190" style="fill: white;">
+    <tspan fill="chartreuse">Mar 25 04:18:04</tspan> <tspan fill="green">xxx</tspan> <tspan fill="cornflowerblue">dovecot</tspan>: pop3-login: Login: user=&lt;xxx&gt;, method=PLAIN, rip=xxx.xx.xxx.xx, lip=xxx.xx.xxx.xxx
+  </text>
+  <text font-size="10" x="10" y="200" style="fill: white;">
+    <tspan fill="chartreuse">Mar 25 04:18:04</tspan> <tspan fill="green">xxx</tspan> <tspan fill="cornflowerblue">dovecot</tspan>: pop3-login: Login: user=&lt;xxx&gt;, method=PLAIN, rip=xxx.xxx.xx.xxx, lip=xxx.xx.xxx.xxx, TLS
+  </text>
+  <text font-size="10" x="10" y="210" style="fill: white;">
+    <tspan fill="chartreuse">Mar 25 04:18:04</tspan> <tspan fill="green">xxx</tspan> <tspan fill="cornflowerblue">dovecot</tspan>: POP3(xxx): Disconnected: Logged out top=0/0, retr=0/0, del=0/582, size=97911928
+  </text>
+</svg>
