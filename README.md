@@ -80,3 +80,25 @@ The rest colors are used to colorize the captured group in the expression.
 In the example, the whole line is colorized to `White`, the first group captured by `(.*?)` is colorized to `LightGreen`.
 
 `formats.lines.tokens` specifies the special tokens to be colorized in the matched line.
+
+### Available colors
+
+The available colors are below.
+
+- Black
+- Blue
+- Cyan
+- Default
+- Green
+- LightBlack
+- LightBlue
+- LightCyan
+- LightGreen
+- LightMagenta
+- LightRed
+- LightWhite
+- LightYellow
+- Magenta
+- Red
+- White
+- Yellow
