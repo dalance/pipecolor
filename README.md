@@ -20,6 +20,7 @@ cargo install pipecolor
 ```
 
 Put the colorize rule file to `~/.pipecolor.toml`.
+
 `sample/pipecolor.toml` in this repository is an example.
 
 ## Usage
