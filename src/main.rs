@@ -127,14 +127,14 @@ fn get_reader_stdin() -> Result<Box<BufRead>> {
     Ok(Box::new(BufReader::new(stdin())))
 }
 
-fn output(reader: &mut BufRead, writer: &mut Write, use_color: bool, config: &Config, _opt: &Opt) {
+fn output(reader: &mut BufRead, writer: &mut Write, use_color: bool, config: &Config, opt: &Opt) {
     let mut s = String::new();
     loop {
         match reader.read_line(&mut s) {
             Ok(0) => break,
             Ok(_) => {
                 if use_color {
-                    s = apply_style(s, &config);
+                    s = apply_style(s, config, opt);
                 }
                 let _ = writer.write(s.as_bytes());
                 //let _ = writer.flush();
@@ -145,7 +145,7 @@ fn output(reader: &mut BufRead, writer: &mut Write, use_color: bool, config: &Co
     }
 }
 
-fn apply_style(mut s: String, config: &Config) -> String {
+fn apply_style(mut s: String, config: &Config, opt: &Opt) -> String {
     #[derive(Debug)]
     enum PosType {
         Start,
@@ -157,6 +157,9 @@ fn apply_style(mut s: String, config: &Config) -> String {
     for line in &config.lines {
         let cap = line.pat.captures(&s);
         if let Some(cap) = cap {
+            if opt.verbose {
+                eprintln!("pipecolor: line matched to '{:?}'", line.pat);
+            }
             for (j, mat) in cap.iter().enumerate() {
                 if let Some(mat) = mat {
                     pos.push((PosType::Start, mat.start(), line.colors[j].clone()));
