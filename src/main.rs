@@ -1,6 +1,6 @@
+extern crate atty;
 #[macro_use]
 extern crate error_chain;
-extern crate nix;
 extern crate regex;
 extern crate serde;
 #[macro_use]
@@ -10,12 +10,11 @@ extern crate structopt;
 extern crate termion;
 extern crate toml;
 
+use atty::Stream;
 use regex::Regex;
-use nix::sys::stat::{fstat, SFlag};
 use std::env::home_dir;
 use std::fs::File;
 use std::io::{stdin, stdout, BufRead, BufReader, BufWriter, Read, Write};
-use std::os::unix::io::AsRawFd;
 use std::path::{Path, PathBuf};
 use structopt::{clap, StructOpt};
 use termion::color;
@@ -111,7 +110,6 @@ error_chain! {
     foreign_links {
         Io(::std::io::Error);
         Toml(::toml::de::Error);
-        Nix(::nix::Error);
     }
 }
 
@@ -276,16 +274,14 @@ fn run_opt(opt: &Opt) -> Result<()> {
         None => toml::from_str(DEFAULT_CONFIG).unwrap(),
     };
 
-    let stdout = stdout();
-    let sflag = SFlag::from_bits_truncate(fstat(stdout.as_raw_fd())?.st_mode);
     let use_color = match opt.mode.as_ref() {
-        "auto" => !sflag.contains(SFlag::S_IFREG),
+        "auto" => atty::is(Stream::Stdout),
         "always" => true,
         "disable" => false,
         _ => true,
     };
 
-    let mut writer = BufWriter::new(stdout);
+    let mut writer = BufWriter::new(stdout());
 
     if opt.files.is_empty() {
         let mut reader = get_reader_stdin()?;
