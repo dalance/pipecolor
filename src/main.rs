@@ -1,5 +1,6 @@
 #[macro_use]
 extern crate error_chain;
+extern crate nix;
 extern crate regex;
 extern crate serde;
 #[macro_use]
@@ -10,9 +11,11 @@ extern crate termion;
 extern crate toml;
 
 use regex::Regex;
+use nix::sys::stat::{fstat, SFlag};
 use std::env::home_dir;
 use std::fs::File;
 use std::io::{stdin, stdout, BufRead, BufReader, BufWriter, Read, Write};
+use std::os::unix::io::AsRawFd;
 use std::path::{Path, PathBuf};
 use structopt::{clap, StructOpt};
 use termion::color;
@@ -30,6 +33,10 @@ pub struct Opt {
     /// Files to show
     #[structopt(name = "FILE", parse(from_os_str))]
     pub files: Vec<PathBuf>,
+
+    /// Colorize mode
+    #[structopt(short = "m", long = "mode", default_value = "auto", possible_value = "auto", possible_value = "always", possible_value = "disable")]
+    pub mode: String,
 
     /// Config file
     #[structopt(short = "c", long = "config", parse(from_os_str))]
@@ -104,6 +111,7 @@ error_chain! {
     foreign_links {
         Io(::std::io::Error);
         Toml(::toml::de::Error);
+        Nix(::nix::Error);
     }
 }
 
@@ -120,13 +128,15 @@ fn get_reader_stdin() -> Result<Box<BufRead>> {
     Ok(Box::new(BufReader::new(stdin())))
 }
 
-fn output(reader: &mut BufRead, writer: &mut Write, config: &Config, _opt: &Opt) {
+fn output(reader: &mut BufRead, writer: &mut Write, use_color: bool, config: &Config, _opt: &Opt) {
     let mut s = String::new();
     loop {
         match reader.read_line(&mut s) {
             Ok(0) => break,
             Ok(_) => {
-                s = apply_style(s, &config);
+                if use_color {
+                    s = apply_style(s, &config);
+                }
                 let _ = writer.write(s.as_bytes());
                 //let _ = writer.flush();
                 s.clear();
@@ -266,15 +276,24 @@ fn run_opt(opt: &Opt) -> Result<()> {
         None => toml::from_str(DEFAULT_CONFIG).unwrap(),
     };
 
-    let mut writer = BufWriter::new(stdout());
+    let stdout = stdout();
+    let sflag = SFlag::from_bits_truncate(fstat(stdout.as_raw_fd())?.st_mode);
+    let use_color = match opt.mode.as_ref() {
+        "auto" => !sflag.contains(SFlag::S_IFREG),
+        "always" => true,
+        "disable" => false,
+        _ => true,
+    };
+
+    let mut writer = BufWriter::new(stdout);
 
     if opt.files.is_empty() {
         let mut reader = get_reader_stdin()?;
-        output(&mut *reader, writer.get_mut(), &config, &opt);
+        output(&mut *reader, writer.get_mut(), use_color, &config, &opt);
     } else {
         for f in &opt.files {
             let mut reader = get_reader_file(&f)?;
-            output(&mut *reader, writer.get_mut(), &config, &opt);
+            output(&mut *reader, writer.get_mut(), use_color, &config, &opt);
         }
     };
 

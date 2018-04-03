@@ -41,6 +41,9 @@ $ pipecolor -c ./sample/pipecolor.toml sample/maillog
 
 <a><img src="https://rawgit.com/dalance/pipecolor/master/sample/maillog.svg"/></a>
 
+If output is redirected to a file, colorization is disabled automatically.
+You can force to colorize by `pipecolor --mode always`.
+
 ### Colorize rule
 
 See the example rule `sample/pipecolor.toml`.
