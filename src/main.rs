@@ -382,9 +382,24 @@ D123 456 789 xyz
         let mut reader = BufReader::new(TEST_DATA.as_bytes());
         let out = String::new();
         let mut writer = BufWriter::new(out.into_bytes());
-        output(&mut reader, writer.get_mut(), &config, &opt);
+        output(&mut reader, writer.get_mut(), true, &config, &opt);
         assert_eq!(
             TEST_RESULT,
+            &String::from_utf8(writer.get_ref().to_vec()).unwrap()
+        );
+    }
+
+    #[test]
+    fn test_output_disable() {
+        let args = vec!["pipecolor"];
+        let opt = Opt::from_iter(args.iter());
+        let config: Config = toml::from_str(TEST_CONFIG).unwrap();
+        let mut reader = BufReader::new(TEST_DATA.as_bytes());
+        let out = String::new();
+        let mut writer = BufWriter::new(out.into_bytes());
+        output(&mut reader, writer.get_mut(), false, &config, &opt);
+        assert_eq!(
+            TEST_DATA,
             &String::from_utf8(writer.get_ref().to_vec()).unwrap()
         );
     }
