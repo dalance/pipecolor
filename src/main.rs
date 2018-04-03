@@ -34,7 +34,8 @@ pub struct Opt {
     pub files: Vec<PathBuf>,
 
     /// Colorize mode
-    #[structopt(short = "m", long = "mode", default_value = "auto", possible_value = "auto", possible_value = "always", possible_value = "disable")]
+    #[structopt(short = "m", long = "mode", default_value = "auto", possible_value = "auto",
+                possible_value = "always", possible_value = "disable")]
     pub mode: String,
 
     /// Config file
