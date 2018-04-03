@@ -143,7 +143,7 @@ dependencies = [
 
 [[package]]
 name = "pipecolor"
-version = "0.2.1-pre"
+version = "0.2.1"
 dependencies = [
  "error-chain 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "nix 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)",
