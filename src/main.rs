@@ -172,7 +172,7 @@ fn apply_style(mut s: String, config: &Config, opt: &Opt) -> String {
                     for (j, mat) in cap.iter().enumerate() {
                         if let Some(mat) = mat {
                             pos.push((PosType::Start, mat.start(), token.colors[j].clone()));
-                            pos.push((PosType::End, mat.end(), token.colors[j].clone()));
+                            pos.insert(0, (PosType::End, mat.end(), token.colors[j].clone()));
                         }
                     }
                 }
@@ -266,7 +266,7 @@ fn run_opt(opt: &Opt) -> Result<()> {
     let config: Config = match config {
         Some(c) => {
             if opt.verbose {
-                println!("pipecolor: Read config from '{}'", c.to_string_lossy());
+                eprintln!("pipecolor: Read config from '{}'", c.to_string_lossy());
             }
             let mut f =
                 File::open(&c).chain_err(|| format!("failed to open '{}'", c.to_string_lossy()))?;
@@ -310,21 +310,21 @@ mod tests {
 
     pub static TEST_CONFIG: &'static str = r#"
     [[lines]]
-        pat   = "A(.*) (.*) (.*)"
+        pat   = "A(.*) (.*) (.*) .*"
         colors = ["Black", "Blue", "Cyan", "Default"]
         [[lines.tokens]]
             pat   = "A"
             colors = ["Green"]
     [[lines]]
-        pat   = "B(.*) (.*) (.*)"
+        pat   = "B(.*) (.*) (.*) .*"
         colors = ["LightBlack", "LightBlue", "LightCyan", "LightGreen"]
         tokens = []
     [[lines]]
-        pat   = "C(.*) (.*) (.*)"
+        pat   = "C(.*) (.*) (.*) .*"
         colors = ["LightMagenta", "LightRed", "LightWhite", "LightYellow"]
         tokens = []
     [[lines]]
-        pat   = "D(.*) (.*) (.*)"
+        pat   = "D(.*) (.*) (.*) .*"
         colors = ["Magenta", "Red", "White", "Yellow"]
         tokens = []
     "#;
@@ -336,7 +336,7 @@ C123 456 789 xyz
 D123 456 789 xyz
     "#;
 
-    pub static TEST_RESULT: &'static str = "\n\u{1b}[38;5;0m\u{1b}[38;5;2mA\u{1b}[38;5;4m\u{1b}[38;5;2m123 456\u{1b}[38;5;0m \u{1b}[38;5;6m789\u{1b}[38;5;0m \u{1b}[39mxyz\u{1b}[38;5;0m\u{1b}[39m\n\u{1b}[38;5;8mB\u{1b}[38;5;12m123 456\u{1b}[38;5;8m \u{1b}[38;5;14m789\u{1b}[38;5;8m \u{1b}[38;5;10mxyz\u{1b}[38;5;8m\u{1b}[39m\n\u{1b}[38;5;13mC\u{1b}[38;5;9m123 456\u{1b}[38;5;13m \u{1b}[38;5;15m789\u{1b}[38;5;13m \u{1b}[38;5;11mxyz\u{1b}[38;5;13m\u{1b}[39m\n\u{1b}[38;5;5mD\u{1b}[38;5;1m123 456\u{1b}[38;5;5m \u{1b}[38;5;7m789\u{1b}[38;5;5m \u{1b}[38;5;3mxyz\u{1b}[38;5;5m\u{1b}[39m\n    ";
+    pub static TEST_RESULT: &'static str = "\n\u{1b}[38;5;0m\u{1b}[38;5;2mA\u{1b}[38;5;0m\u{1b}[38;5;4m123\u{1b}[38;5;0m \u{1b}[38;5;6m456\u{1b}[38;5;0m \u{1b}[39m789\u{1b}[38;5;0m xyz\u{1b}[39m\n\u{1b}[38;5;8mB\u{1b}[38;5;12m123\u{1b}[38;5;8m \u{1b}[38;5;14m456\u{1b}[38;5;8m \u{1b}[38;5;10m789\u{1b}[38;5;8m xyz\u{1b}[39m\n\u{1b}[38;5;13mC\u{1b}[38;5;9m123\u{1b}[38;5;13m \u{1b}[38;5;15m456\u{1b}[38;5;13m \u{1b}[38;5;11m789\u{1b}[38;5;13m xyz\u{1b}[39m\n\u{1b}[38;5;5mD\u{1b}[38;5;1m123\u{1b}[38;5;5m \u{1b}[38;5;7m456\u{1b}[38;5;5m \u{1b}[38;5;3m789\u{1b}[38;5;5m xyz\u{1b}[39m\n    ";
 
     #[test]
     fn test_run() {
