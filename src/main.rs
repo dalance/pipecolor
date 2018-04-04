@@ -127,14 +127,14 @@ fn get_reader_stdin() -> Result<Box<BufRead>> {
     Ok(Box::new(BufReader::new(stdin())))
 }
 
-fn output(reader: &mut BufRead, writer: &mut Write, use_color: bool, config: &Config, opt: &Opt) {
+fn output(reader: &mut BufRead, writer: &mut Write, use_color: bool, config: &Config, opt: &Opt) -> Result<()> {
     let mut s = String::new();
     loop {
         match reader.read_line(&mut s) {
             Ok(0) => break,
             Ok(_) => {
                 if use_color {
-                    s = apply_style(s, config, opt);
+                    s = apply_style(s, config, opt)?;
                 }
                 let _ = writer.write(s.as_bytes());
                 //let _ = writer.flush();
@@ -143,9 +143,10 @@ fn output(reader: &mut BufRead, writer: &mut Write, use_color: bool, config: &Co
             Err(_) => break,
         }
     }
+    Ok(())
 }
 
-fn apply_style(mut s: String, config: &Config, opt: &Opt) -> String {
+fn apply_style(mut s: String, config: &Config, opt: &Opt) -> Result<String> {
     #[derive(Debug)]
     enum PosType {
         Start,
@@ -200,18 +201,18 @@ fn apply_style(mut s: String, config: &Config, opt: &Opt) -> String {
         ret.push_str(&format!(
             "{}{}",
             s,
-            color::Fg(&*conv_color(&current_color.last()))
+            color::Fg(&*conv_color(&current_color.last())?)
         ));
         idx += s.len();
         s = rest;
     }
 
     ret.push_str(&s);
-    ret
+    Ok(ret)
 }
 
-fn conv_color(s: &Option<&String>) -> Box<Color> {
-    if let &Some(ref s) = s {
+fn conv_color(s: &Option<&String>) -> Result<Box<Color>> {
+    let ret: Box<Color> = if let &Some(ref s) = s {
         match s.as_ref() {
             "Black" => Box::new(color::Black),
             "Blue" => Box::new(color::Blue),
@@ -230,11 +231,14 @@ fn conv_color(s: &Option<&String>) -> Box<Color> {
             "Red" => Box::new(color::Red),
             "White" => Box::new(color::White),
             "Yellow" => Box::new(color::Yellow),
-            _ => Box::new(color::Reset),
+            _ => {
+                bail!(format!("failed to parse color name '{}'", s));
+            },
         }
     } else {
         Box::new(color::Reset)
-    }
+    };
+    Ok(ret)
 }
 
 fn get_config_path(opt: &Opt) -> Option<PathBuf> {
@@ -289,11 +293,11 @@ fn run_opt(opt: &Opt) -> Result<()> {
 
     if opt.files.is_empty() {
         let mut reader = get_reader_stdin()?;
-        output(&mut *reader, writer.get_mut(), use_color, &config, &opt);
+        let _ = output(&mut *reader, writer.get_mut(), use_color, &config, &opt)?;
     } else {
         for f in &opt.files {
             let mut reader = get_reader_file(&f)?;
-            output(&mut *reader, writer.get_mut(), use_color, &config, &opt);
+            let _ = output(&mut *reader, writer.get_mut(), use_color, &config, &opt)?;
         }
     };
 
@@ -326,6 +330,13 @@ mod tests {
     [[lines]]
         pat   = "D(.*) (.*) (.*) .*"
         colors = ["Magenta", "Red", "White", "Yellow"]
+        tokens = []
+    "#;
+
+    pub static TEST_CONFIG2: &'static str = r#"
+    [[lines]]
+        pat   = "A(.*) (.*) (.*) .*"
+        colors = ["xxx", "Blue", "Cyan", "Default"]
         tokens = []
     "#;
 
@@ -382,7 +393,7 @@ D123 456 789 xyz
         let mut reader = BufReader::new(TEST_DATA.as_bytes());
         let out = String::new();
         let mut writer = BufWriter::new(out.into_bytes());
-        output(&mut reader, writer.get_mut(), true, &config, &opt);
+        let _ = output(&mut reader, writer.get_mut(), true, &config, &opt);
         assert_eq!(
             TEST_RESULT,
             &String::from_utf8(writer.get_ref().to_vec()).unwrap()
@@ -397,10 +408,22 @@ D123 456 789 xyz
         let mut reader = BufReader::new(TEST_DATA.as_bytes());
         let out = String::new();
         let mut writer = BufWriter::new(out.into_bytes());
-        output(&mut reader, writer.get_mut(), false, &config, &opt);
+        let _ = output(&mut reader, writer.get_mut(), false, &config, &opt);
         assert_eq!(
             TEST_DATA,
             &String::from_utf8(writer.get_ref().to_vec()).unwrap()
         );
+    }
+
+    #[test]
+    fn test_output_color_fail() {
+        let args = vec!["pipecolor"];
+        let opt = Opt::from_iter(args.iter());
+        let config: Config = toml::from_str(TEST_CONFIG2).unwrap();
+        let mut reader = BufReader::new(TEST_DATA.as_bytes());
+        let out = String::new();
+        let mut writer = BufWriter::new(out.into_bytes());
+        let ret = output(&mut reader, writer.get_mut(), true, &config, &opt);
+        assert_eq!(&format!("{:?}", ret)[0..50], "Err(Error(Msg(\"failed to parse color name \\\'xxx\\\'\"");
     }
 }
