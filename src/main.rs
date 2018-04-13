@@ -128,8 +128,13 @@ fn output(
     let mut s = String::new();
     loop {
         match read_line_timeout(reader, &mut s) {
-            Ok(0) => break,
-            Ok(_) => {
+            Ok((0, false)) => {
+                break
+            },
+            Ok((0, true)) => {
+                continue
+            },
+            Ok((_, _)) => {
                 if use_color {
                     let (s2, i) = colorize(s, config)?;
                     s = s2;
