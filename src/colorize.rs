@@ -1,7 +1,6 @@
 use regex::Regex;
 use termion::color;
 use termion::color::Color;
-use toml;
 
 // -------------------------------------------------------------------------------------------------
 // Config
@@ -67,7 +66,7 @@ pub fn colorize(mut s: String, config: &Config) -> Result<(String, Option<usize>
     let mut pos = Vec::new();
     let mut line_idx = None;
 
-    for (i,line) in config.lines.iter().enumerate() {
+    for (i, line) in config.lines.iter().enumerate() {
         let cap = line.pat.captures(&s);
         if let Some(cap) = cap {
             line_idx = Some(i);
@@ -143,7 +142,7 @@ fn conv_color(s: &Option<&String>) -> Result<Box<Color>> {
             "Yellow" => Box::new(color::Yellow),
             _ => {
                 bail!(format!("failed to parse color name '{}'", s));
-            },
+            }
         }
     } else {
         Box::new(color::Reset)
@@ -158,6 +157,7 @@ fn conv_color(s: &Option<&String>) -> Result<Box<Color>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use toml;
 
     pub static TEST_CONFIG: &'static str = r#"
     [[lines]]
@@ -215,6 +215,9 @@ mod tests {
     fn test_colorize_fail() {
         let config: Config = toml::from_str(TEST_CONFIG2).unwrap();
         let ret = colorize(String::from("A123 456 789 xyz"), &config);
-        assert_eq!(&format!("{:?}", ret)[0..50], "Err(Error(Msg(\"failed to parse color name \\\'xxx\\\'\"");
+        assert_eq!(
+            &format!("{:?}", ret)[0..50],
+            "Err(Error(Msg(\"failed to parse color name \\\'xxx\\\'\""
+        );
     }
 }

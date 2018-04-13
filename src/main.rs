@@ -1,6 +1,7 @@
 extern crate atty;
 #[macro_use]
 extern crate error_chain;
+extern crate memchr;
 extern crate regex;
 extern crate serde;
 #[macro_use]
@@ -8,17 +9,22 @@ extern crate serde_derive;
 #[macro_use]
 extern crate structopt;
 extern crate termion;
+extern crate timeout_readwrite;
 extern crate toml;
 
 mod colorize;
+mod read_timeout;
 
 use colorize::{colorize, Config};
 use atty::Stream;
+use read_timeout::read_line_timeout;
 use std::env::home_dir;
 use std::fs::File;
 use std::io::{stdin, stdout, BufRead, BufReader, BufWriter, Read, Write};
 use std::path::{Path, PathBuf};
+use std::time::Duration;
 use structopt::{clap, StructOpt};
+use timeout_readwrite::TimeoutReader;
 
 // -------------------------------------------------------------------------------------------------
 // Option
@@ -41,6 +47,10 @@ pub struct Opt {
     /// Config file
     #[structopt(short = "c", long = "config", parse(from_os_str))]
     pub config: Option<PathBuf>,
+
+    /// Timeout of stdin by milliseconds
+    #[structopt(short = "t", long = "timeout", default_value = "500")]
+    pub timeout: u64,
 
     /// Show verbose message
     #[structopt(short = "v", long = "verbose")]
@@ -89,8 +99,11 @@ fn get_reader_file(path: &Path) -> Result<Box<BufRead>> {
     Ok(Box::new(BufReader::new(f)))
 }
 
-fn get_reader_stdin() -> Result<Box<BufRead>> {
-    Ok(Box::new(BufReader::new(stdin())))
+fn get_reader_stdin(timeout_millis: u64) -> Result<Box<BufRead>> {
+    Ok(Box::new(BufReader::new(TimeoutReader::new(
+        stdin(),
+        Duration::from_millis(timeout_millis),
+    ))))
 }
 
 fn get_config_path(opt: &Opt) -> Option<PathBuf> {
@@ -105,10 +118,16 @@ fn get_config_path(opt: &Opt) -> Option<PathBuf> {
     None
 }
 
-fn output(reader: &mut BufRead, writer: &mut Write, use_color: bool, config: &Config, opt: &Opt) -> Result<()> {
+fn output(
+    reader: &mut BufRead,
+    writer: &mut Write,
+    use_color: bool,
+    config: &Config,
+    opt: &Opt,
+) -> Result<()> {
     let mut s = String::new();
     loop {
-        match reader.read_line(&mut s) {
+        match read_line_timeout(reader, &mut s) {
             Ok(0) => break,
             Ok(_) => {
                 if use_color {
@@ -121,7 +140,7 @@ fn output(reader: &mut BufRead, writer: &mut Write, use_color: bool, config: &Co
                     }
                 }
                 let _ = writer.write(s.as_bytes());
-                //let _ = writer.flush();
+                let _ = writer.flush();
                 s.clear();
             }
             Err(_) => break,
@@ -169,7 +188,7 @@ fn run_opt(opt: &Opt) -> Result<()> {
     let mut writer = BufWriter::new(stdout());
 
     if opt.files.is_empty() {
-        let mut reader = get_reader_stdin()?;
+        let mut reader = get_reader_stdin(opt.timeout)?;
         let _ = output(&mut *reader, writer.get_mut(), use_color, &config, &opt)?;
     } else {
         for f in &opt.files {
