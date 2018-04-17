@@ -2,6 +2,8 @@ extern crate atty;
 #[macro_use]
 extern crate error_chain;
 extern crate memchr;
+extern crate nix;
+extern crate proc_reader;
 extern crate regex;
 extern crate serde;
 #[macro_use]
@@ -17,6 +19,8 @@ mod read_timeout;
 
 use colorize::{colorize, Config};
 use atty::Stream;
+use nix::unistd::Pid;
+use proc_reader::ProcReader;
 use read_timeout::read_line_timeout;
 use std::env::home_dir;
 use std::fs::File;
@@ -55,6 +59,10 @@ pub struct Opt {
     /// Show verbose message
     #[structopt(short = "v", long = "verbose")]
     pub verbose: bool,
+
+    /// Attach to the specified process
+    #[structopt(short = "p", long = "process", conflicts_with = "FILE")]
+    pub process: Option<i32>,
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -106,6 +114,17 @@ fn get_reader_stdin(timeout_millis: u64) -> Result<Box<BufRead>> {
     ))))
 }
 
+#[cfg(target_os = "linux")]
+fn get_reader_proc(pid: i32) -> Result<Box<BufRead>> {
+    let pid = Pid::from_raw(pid);
+    Ok(Box::new(BufReader::new(ProcReader::from_stdany(pid))))
+}
+
+#[cfg(not(target_os = "linux"))]
+fn get_reader_proc(_pid: i32) -> Result<Box<BufRead>> {
+    Err("--process option is supported on linux only".into())
+}
+
 fn get_config_path(opt: &Opt) -> Option<PathBuf> {
     if let Some(ref p) = opt.config {
         return Some(p.clone());
@@ -127,14 +146,16 @@ fn output(
 ) -> Result<()> {
     let mut s = String::new();
     loop {
-        match read_line_timeout(reader, &mut s) {
-            Ok((0, false)) => {
-                break
-            },
-            Ok((0, true)) => {
-                continue
-            },
-            Ok((_, _)) => {
+        match read_line_timeout(reader, &mut s)? {
+            (0, false) => {
+                if opt.process.is_some() {
+                    continue;
+                } else {
+                    break;
+                }
+            }
+            (0, true) => continue,
+            (_, _) => {
                 if use_color {
                     let (s2, i) = colorize(s, config)?;
                     s = s2;
@@ -148,7 +169,6 @@ fn output(
                 let _ = writer.flush();
                 s.clear();
             }
-            Err(_) => break,
         }
     }
     Ok(())
@@ -192,7 +212,10 @@ fn run_opt(opt: &Opt) -> Result<()> {
 
     let mut writer = BufWriter::new(stdout());
 
-    if opt.files.is_empty() {
+    if let Some(pid) = opt.process {
+        let mut reader = get_reader_proc(pid)?;
+        let _ = output(&mut *reader, writer.get_mut(), use_color, &config, &opt)?;
+    } else if opt.files.is_empty() {
         let mut reader = get_reader_stdin(opt.timeout)?;
         let _ = output(&mut *reader, writer.get_mut(), use_color, &config, &opt)?;
     } else {

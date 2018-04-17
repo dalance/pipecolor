@@ -48,7 +48,10 @@ pub fn read_until_timeout<R: BufRead + ?Sized>(
     }
 }
 
-pub fn read_line_timeout<R: BufRead + ?Sized>(r: &mut R, buf: &mut String) -> Result<(usize, bool)> {
+pub fn read_line_timeout<R: BufRead + ?Sized>(
+    r: &mut R,
+    buf: &mut String,
+) -> Result<(usize, bool)> {
     append_to_string(buf, |b| read_until_timeout(r, b'\n', b))
 }
 
