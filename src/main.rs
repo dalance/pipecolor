@@ -3,7 +3,8 @@ extern crate atty;
 extern crate error_chain;
 extern crate memchr;
 extern crate nix;
-#[cfg(all(target_os = "linux", target_arch = "x86_64", any(target_env = "gnu", target_env = "musl")))]
+#[cfg(all(target_os = "linux", target_arch = "x86_64",
+          any(target_env = "gnu", target_env = "musl")))]
 extern crate proc_reader;
 extern crate regex;
 extern crate serde;
@@ -21,7 +22,8 @@ mod read_timeout;
 use colorize::{colorize, Config};
 use atty::Stream;
 use nix::unistd::Pid;
-#[cfg(all(target_os = "linux", target_arch = "x86_64", any(target_env = "gnu", target_env = "musl")))]
+#[cfg(all(target_os = "linux", target_arch = "x86_64",
+          any(target_env = "gnu", target_env = "musl")))]
 use proc_reader::ProcReader;
 use read_timeout::read_line_timeout;
 use std::env::home_dir;
@@ -116,13 +118,15 @@ fn get_reader_stdin(timeout_millis: u64) -> Result<Box<BufRead>> {
     ))))
 }
 
-#[cfg(all(target_os = "linux", target_arch = "x86_64", any(target_env = "gnu", target_env = "musl")))]
+#[cfg(all(target_os = "linux", target_arch = "x86_64",
+          any(target_env = "gnu", target_env = "musl")))]
 fn get_reader_proc(pid: i32) -> Result<Box<BufRead>> {
     let pid = Pid::from_raw(pid);
     Ok(Box::new(BufReader::new(ProcReader::from_stdany(pid))))
 }
 
-#[cfg(not(all(target_os = "linux", target_arch = "x86_64", any(target_env = "gnu", target_env = "musl"))))]
+#[cfg(not(all(target_os = "linux", target_arch = "x86_64",
+              any(target_env = "gnu", target_env = "musl"))))]
 fn get_reader_proc(_pid: i32) -> Result<Box<BufRead>> {
     Err("--process option is supported on linux only".into())
 }
