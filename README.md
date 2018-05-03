@@ -10,6 +10,10 @@ A terminal filter to colorize output
 **pipecolor** is a terminal filter to colorize output.
 You can customize the colorize rule by regular expression.
 
+## Demo
+
+![demo](https://github.com/dalance/pipecolor/blob/master/sample/pipecolor.gif)
+
 ## Install
 Download from [release page](https://github.com/dalance/pipecolor/releases/latest), and extract to the directory in PATH.
 
