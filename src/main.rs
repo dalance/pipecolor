@@ -3,8 +3,11 @@ extern crate atty;
 extern crate error_chain;
 extern crate memchr;
 extern crate nix;
-#[cfg(all(target_os = "linux", target_arch = "x86_64",
-          any(target_env = "gnu", target_env = "musl")))]
+#[cfg(all(
+    target_os = "linux",
+    target_arch = "x86_64",
+    any(target_env = "gnu", target_env = "musl")
+))]
 extern crate proc_reader;
 extern crate regex;
 extern crate serde;
@@ -19,11 +22,14 @@ extern crate toml;
 mod colorize;
 mod read_timeout;
 
-use colorize::{colorize, Config};
 use atty::Stream;
+use colorize::{colorize, Config};
 use nix::unistd::Pid;
-#[cfg(all(target_os = "linux", target_arch = "x86_64",
-          any(target_env = "gnu", target_env = "musl")))]
+#[cfg(all(
+    target_os = "linux",
+    target_arch = "x86_64",
+    any(target_env = "gnu", target_env = "musl")
+))]
 use proc_reader::ProcReader;
 use read_timeout::read_line_timeout;
 use std::env::home_dir;
@@ -40,7 +46,9 @@ use timeout_readwrite::TimeoutReader;
 
 #[derive(Debug, StructOpt)]
 #[structopt(name = "pipecolor")]
-#[structopt(raw(long_version = "option_env!(\"LONG_VERSION\").unwrap_or(env!(\"CARGO_PKG_VERSION\"))"))]
+#[structopt(raw(
+    long_version = "option_env!(\"LONG_VERSION\").unwrap_or(env!(\"CARGO_PKG_VERSION\"))"
+))]
 #[structopt(raw(setting = "clap::AppSettings::ColoredHelp"))]
 pub struct Opt {
     /// Files to show
@@ -48,8 +56,14 @@ pub struct Opt {
     pub files: Vec<PathBuf>,
 
     /// Colorize mode
-    #[structopt(short = "m", long = "mode", default_value = "auto", possible_value = "auto",
-                possible_value = "always", possible_value = "disable")]
+    #[structopt(
+        short = "m",
+        long = "mode",
+        default_value = "auto",
+        possible_value = "auto",
+        possible_value = "always",
+        possible_value = "disable"
+    )]
     pub mode: String,
 
     /// Config file
@@ -107,7 +121,8 @@ error_chain! {
 // -------------------------------------------------------------------------------------------------
 
 fn get_reader_file(path: &Path) -> Result<Box<BufRead>> {
-    let f = File::open(path).chain_err(|| format!("failed to open '{}'", path.to_string_lossy()))?;
+    let f =
+        File::open(path).chain_err(|| format!("failed to open '{}'", path.to_string_lossy()))?;
     Ok(Box::new(BufReader::new(f)))
 }
 
@@ -118,15 +133,21 @@ fn get_reader_stdin(timeout_millis: u64) -> Result<Box<BufRead>> {
     ))))
 }
 
-#[cfg(all(target_os = "linux", target_arch = "x86_64",
-          any(target_env = "gnu", target_env = "musl")))]
+#[cfg(all(
+    target_os = "linux",
+    target_arch = "x86_64",
+    any(target_env = "gnu", target_env = "musl")
+))]
 fn get_reader_proc(pid: i32) -> Result<Box<BufRead>> {
     let pid = Pid::from_raw(pid);
     Ok(Box::new(BufReader::new(ProcReader::from_stdany(pid))))
 }
 
-#[cfg(not(all(target_os = "linux", target_arch = "x86_64",
-              any(target_env = "gnu", target_env = "musl"))))]
+#[cfg(not(all(
+    target_os = "linux",
+    target_arch = "x86_64",
+    any(target_env = "gnu", target_env = "musl")
+)))]
 fn get_reader_proc(_pid: i32) -> Result<Box<BufRead>> {
     Err("--process option is supported on linux only".into())
 }
