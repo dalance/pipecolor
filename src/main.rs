@@ -1,28 +1,9 @@
-extern crate atty;
-#[macro_use]
-extern crate error_chain;
-extern crate memchr;
-extern crate nix;
-#[cfg(all(
-    target_os = "linux",
-    target_arch = "x86_64",
-    any(target_env = "gnu", target_env = "musl")
-))]
-extern crate proc_reader;
-extern crate regex;
-extern crate serde;
-#[macro_use]
-extern crate serde_derive;
-extern crate structopt;
-extern crate termion;
-extern crate timeout_readwrite;
-extern crate toml;
-
 mod colorize;
 mod read_timeout;
 
 use atty::Stream;
 use colorize::{colorize, Config};
+use error_chain::{error_chain, quick_main};
 use nix::unistd::Pid;
 #[cfg(all(
     target_os = "linux",
@@ -106,11 +87,11 @@ pub static DEFAULT_CONFIG: &'static str = r#"
 
 error_chain! {
     links {
-        Colorize(::colorize::Error, ::colorize::ErrorKind);
+        Colorize(crate::colorize::Error, crate::colorize::ErrorKind);
     }
     foreign_links {
-        Io(::std::io::Error);
-        Toml(::toml::de::Error);
+        Io(std::io::Error);
+        Toml(toml::de::Error);
     }
 }
 

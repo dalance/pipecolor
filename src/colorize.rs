@@ -1,4 +1,6 @@
+use error_chain::{bail, error_chain};
 use regex::Regex;
+use serde_derive::Deserialize;
 use termion::color;
 use termion::color::Color;
 
