@@ -13,7 +13,6 @@ extern crate regex;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
-#[macro_use]
 extern crate structopt;
 extern crate termion;
 extern crate timeout_readwrite;
@@ -32,7 +31,6 @@ use nix::unistd::Pid;
 ))]
 use proc_reader::ProcReader;
 use read_timeout::read_line_timeout;
-use std::env::home_dir;
 use std::fs::File;
 use std::io::{stdin, stdout, BufRead, BufReader, BufWriter, Read, Write};
 use std::path::{Path, PathBuf};
@@ -120,13 +118,13 @@ error_chain! {
 // Functions
 // -------------------------------------------------------------------------------------------------
 
-fn get_reader_file(path: &Path) -> Result<Box<BufRead>> {
+fn get_reader_file(path: &Path) -> Result<Box<dyn BufRead>> {
     let f =
         File::open(path).chain_err(|| format!("failed to open '{}'", path.to_string_lossy()))?;
     Ok(Box::new(BufReader::new(f)))
 }
 
-fn get_reader_stdin(timeout_millis: u64) -> Result<Box<BufRead>> {
+fn get_reader_stdin(timeout_millis: u64) -> Result<Box<dyn BufRead>> {
     Ok(Box::new(BufReader::new(TimeoutReader::new(
         stdin(),
         Duration::from_millis(timeout_millis),
@@ -138,7 +136,7 @@ fn get_reader_stdin(timeout_millis: u64) -> Result<Box<BufRead>> {
     target_arch = "x86_64",
     any(target_env = "gnu", target_env = "musl")
 ))]
-fn get_reader_proc(pid: i32) -> Result<Box<BufRead>> {
+fn get_reader_proc(pid: i32) -> Result<Box<dyn BufRead>> {
     let pid = Pid::from_raw(pid);
     Ok(Box::new(BufReader::new(ProcReader::from_stdany(pid))))
 }
@@ -155,7 +153,7 @@ fn get_reader_proc(_pid: i32) -> Result<Box<BufRead>> {
 fn get_config_path(opt: &Opt) -> Option<PathBuf> {
     if let Some(ref p) = opt.config {
         return Some(p.clone());
-    } else if let Some(mut p) = home_dir() {
+    } else if let Some(mut p) = dirs::home_dir() {
         p.push(".pipecolor.toml");
         if p.exists() {
             return Some(p);
@@ -165,8 +163,8 @@ fn get_config_path(opt: &Opt) -> Option<PathBuf> {
 }
 
 fn output(
-    reader: &mut BufRead,
-    writer: &mut Write,
+    reader: &mut dyn BufRead,
+    writer: &mut dyn Write,
     use_color: bool,
     config: &Config,
     opt: &Opt,

@@ -146,8 +146,8 @@ pub fn colorize(mut s: String, config: &Config) -> Result<(String, Option<usize>
     Ok((ret, line_idx))
 }
 
-fn conv_color(s: &Option<&String>) -> Result<Box<Color>> {
-    let ret: Box<Color> = if let &Some(ref s) = s {
+fn conv_color(s: &Option<&String>) -> Result<Box<dyn Color>> {
+    let ret: Box<dyn Color> = if let &Some(ref s) = s {
         match s.as_ref() {
             "Black" => Box::new(color::Black),
             "Blue" => Box::new(color::Blue),
