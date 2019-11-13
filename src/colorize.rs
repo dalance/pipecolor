@@ -16,6 +16,7 @@ pub struct Line {
     #[serde(with = "regex_serde")]
     pub pat: Regex,
 
+    #[serde(with = "colors_serde")]
     pub colors: Vec<String>,
 
     pub tokens: Vec<Token>,
@@ -26,6 +27,7 @@ pub struct Token {
     #[serde(with = "regex_serde")]
     pub pat: Regex,
 
+    #[serde(with = "colors_serde")]
     pub colors: Vec<String>,
 }
 
@@ -40,6 +42,22 @@ mod regex_serde {
         let s = String::deserialize(deserializer)?;
         let r = Regex::new(&s).map_err(serde::de::Error::custom)?;
         Ok(r)
+    }
+}
+
+mod colors_serde {
+    use serde::{self, Deserialize, Deserializer};
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Vec<String>, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s = Vec::<String>::deserialize(deserializer)?;
+        if s.is_empty() {
+            Err(serde::de::Error::custom("no color"))
+        } else {
+            Ok(s)
+        }
     }
 }
 
@@ -72,8 +90,12 @@ pub fn colorize(mut s: String, config: &Config) -> Result<(String, Option<usize>
             line_idx = Some(i);
             for (j, mat) in cap.iter().enumerate() {
                 if let Some(mat) = mat {
-                    pos.push((PosType::Start, mat.start(), line.colors[j].clone()));
-                    pos.push((PosType::End, mat.end(), line.colors[j].clone()));
+                    let color = line
+                        .colors
+                        .get(j)
+                        .unwrap_or_else(|| line.colors.last().unwrap());
+                    pos.push((PosType::Start, mat.start(), color.clone()));
+                    pos.push((PosType::End, mat.end(), color.clone()));
                 }
             }
             for token in &line.tokens {
@@ -81,8 +103,12 @@ pub fn colorize(mut s: String, config: &Config) -> Result<(String, Option<usize>
                 if let Some(cap) = cap {
                     for (j, mat) in cap.iter().enumerate() {
                         if let Some(mat) = mat {
-                            pos.push((PosType::Start, mat.start(), token.colors[j].clone()));
-                            pos.insert(0, (PosType::End, mat.end(), token.colors[j].clone()));
+                            let color = token
+                                .colors
+                                .get(j)
+                                .unwrap_or_else(|| token.colors.last().unwrap());
+                            pos.push((PosType::Start, mat.start(), color.clone()));
+                            pos.insert(0, (PosType::End, mat.end(), color.clone()));
                         }
                     }
                 }
