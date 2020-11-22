@@ -17,7 +17,7 @@ codecov   = { repository = "dalance/pipecolor", branch = "master", service = "gi
 atty              = "0.2.8"
 dirs              = "2.0.2"
 error-chain       = "0.12.1"
-memchr            = "2.0.1"
+memchr            = "2.3.4"
 nix               = "0.10.0"
 regex             = "0.2.10"
 serde             = "1.0.33"
