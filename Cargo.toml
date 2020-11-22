@@ -14,7 +14,7 @@ travis-ci = { repository = "dalance/pipecolor" }
 codecov   = { repository = "dalance/pipecolor", branch = "master", service = "github" }
 
 [dependencies]
-atty              = "0.2.8"
+atty              = "0.2.14"
 dirs              = "2.0.2"
 error-chain       = "0.12.1"
 memchr            = "2.3.4"
