@@ -23,7 +23,7 @@ regex             = "0.2.10"
 serde             = "1.0.33"
 serde_derive      = "1.0.117"
 structopt         = "0.2.5"
-termion           = "1.5.1"
+termion           = "1.5.5"
 timeout-readwrite = "0.1.0"
 toml              = "0.4.5"
 
