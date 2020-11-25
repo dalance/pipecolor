@@ -4,7 +4,6 @@ mod read_timeout;
 use atty::Stream;
 use colorize::{colorize, Config};
 use error_chain::{error_chain, quick_main};
-use nix::unistd::Pid;
 #[cfg(all(
     target_os = "linux",
     target_arch = "x86_64",
@@ -25,10 +24,8 @@ use timeout_readwrite::TimeoutReader;
 
 #[derive(Debug, StructOpt)]
 #[structopt(name = "pipecolor")]
-#[structopt(raw(
-    long_version = "option_env!(\"LONG_VERSION\").unwrap_or(env!(\"CARGO_PKG_VERSION\"))"
-))]
-#[structopt(raw(setting = "clap::AppSettings::ColoredHelp"))]
+#[structopt(long_version = option_env!("LONG_VERSION").unwrap_or(env!("CARGO_PKG_VERSION")))]
+#[structopt(setting = clap::AppSettings::ColoredHelp)]
 pub struct Opt {
     /// Files to show
     #[structopt(name = "FILE", parse(from_os_str))]
@@ -118,8 +115,9 @@ fn get_reader_stdin(timeout_millis: u64) -> Result<Box<dyn BufRead>> {
     any(target_env = "gnu", target_env = "musl")
 ))]
 fn get_reader_proc(pid: i32) -> Result<Box<dyn BufRead>> {
-    let pid = Pid::from_raw(pid);
-    Ok(Box::new(BufReader::new(ProcReader::from_stdany(pid))))
+    Ok(Box::new(BufReader::new(ProcReader::from_stdany(
+        pid as u32,
+    ))))
 }
 
 #[cfg(not(all(
