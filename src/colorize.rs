@@ -245,7 +245,7 @@ mod tests {
         let ret = colorize(String::from("A123 456 789 xyz"), &config);
         assert_eq!(
             &format!("{:?}", ret)[0..50],
-            "Err(Error(Msg(\"failed to parse color name \\\'xxx\\\'\""
+            "Err(Error(Msg(\"failed to parse color name \'xxx\'\"),"
         );
     }
 }
