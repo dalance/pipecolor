@@ -22,9 +22,9 @@ regex             = "1"
 serde             = "1"
 serde_derive      = "1"
 structopt         = "0.3"
-termion           = "1"
+termion           = "2"
 timeout-readwrite = "0.3"
-toml              = "0.5"
+toml              = "0.7"
 
 [target.x86_64-unknown-linux-gnu.dependencies]
 proc-reader = "0.5"
