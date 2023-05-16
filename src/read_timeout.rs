@@ -1,14 +1,5 @@
 use memchr;
-use std::io::{BufRead, Error, ErrorKind, Result};
-
-// -------------------------------------------------------------------------------------------------
-// Functions
-// -------------------------------------------------------------------------------------------------
-
-struct Guard<'a> {
-    buf: &'a mut Vec<u8>,
-    len: usize,
-}
+use std::io::{BufRead, ErrorKind, Result};
 
 // -------------------------------------------------------------------------------------------------
 // Functions
@@ -50,33 +41,9 @@ pub fn read_until_timeout<R: BufRead + ?Sized>(
 
 pub fn read_line_timeout<R: BufRead + ?Sized>(
     r: &mut R,
-    buf: &mut String,
+    buf: &mut Vec<u8>,
 ) -> Result<(usize, bool)> {
-    append_to_string(buf, |b| read_until_timeout(r, b'\n', b))
-}
-
-fn append_to_string<F>(buf: &mut String, f: F) -> Result<(usize, bool)>
-where
-    F: FnOnce(&mut Vec<u8>) -> Result<(usize, bool)>,
-{
-    unsafe {
-        let mut g = Guard {
-            len: buf.len(),
-            buf: buf.as_mut_vec(),
-        };
-        let ret = f(g.buf);
-        if String::from_utf8(g.buf[g.len..].to_vec()).is_err() {
-            ret.and_then(|_| {
-                Err(Error::new(
-                    ErrorKind::InvalidData,
-                    "stream did not contain valid UTF-8",
-                ))
-            })
-        } else {
-            g.len = g.buf.len();
-            ret
-        }
-    }
+    read_until_timeout(r, b'\n', buf)
 }
 
 // -------------------------------------------------------------------------------------------------

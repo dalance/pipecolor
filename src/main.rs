@@ -148,9 +148,9 @@ fn output(
     config: &Config,
     opt: &Opt,
 ) -> Result<()> {
-    let mut s = String::new();
+    let mut buf = Vec::new();
     loop {
-        match read_line_timeout(reader, &mut s)? {
+        match read_line_timeout(reader, &mut buf)? {
             (0, false) => {
                 if opt.process.is_some() {
                     continue;
@@ -160,18 +160,30 @@ fn output(
             }
             (0, true) => continue,
             (_, _) => {
-                if use_color {
-                    let (s2, i) = colorize(s, config)?;
-                    s = s2;
-                    if opt.verbose {
-                        if let Some(i) = i {
-                            eprintln!("pipecolor: line matched to '{:?}'", config.lines[i].pat);
+                let s = std::str::from_utf8(&buf);
+                match s {
+                    Ok(s) => {
+                        if use_color {
+                            let (s, i) = colorize(s.to_string(), config)?;
+                            if opt.verbose {
+                                if let Some(i) = i {
+                                    eprintln!(
+                                        "pipecolor: line matched to '{:?}'",
+                                        config.lines[i].pat
+                                    );
+                                }
+                            }
+                            let _ = writer.write(s.as_bytes());
+                        } else {
+                            let _ = writer.write(s.as_bytes());
                         }
                     }
+                    Err(_) => {
+                        let _ = writer.write(&buf);
+                    }
                 }
-                let _ = writer.write(s.as_bytes());
                 let _ = writer.flush();
-                s.clear();
+                buf.clear();
             }
         }
     }
