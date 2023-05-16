@@ -76,13 +76,12 @@ In the example, the whole line is colorized to `White`, the first group captured
 
 `lines.tokens` specifies the special tokens to be colorized in the matched line.
 
-If no token is required, `tokens` can be empty list.
+If no token is required, `tokens` can be omitted.
 
 ```
 [[lines]]
     pat  = "^(.*?) .*? .*? \\[(.*?)\\] \".*?\" .*? .*? \".*?\" \"(.*?)\""
     colors = ["White", "LightGreen", "LightBlue", "Green"]
-    tokens = []
 ```
 
 ### Available colors
