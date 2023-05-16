@@ -110,7 +110,7 @@ fn get_reader_proc(pid: i32) -> Result<Box<dyn BufRead>> {
     target_arch = "x86_64",
     any(target_env = "gnu", target_env = "musl")
 )))]
-fn get_reader_proc(_pid: i32) -> Result<Box<BufRead>> {
+fn get_reader_proc(_pid: i32) -> Result<Box<dyn BufRead>> {
     Err("--process option is supported on linux only".into())
 }
 
