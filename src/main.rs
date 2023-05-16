@@ -1,9 +1,9 @@
 mod colorize;
 mod read_timeout;
 
+use anyhow::{Context, Result};
 use atty::Stream;
 use colorize::{colorize, Config};
-use error_chain::{error_chain, quick_main};
 #[cfg(all(
     target_os = "linux",
     target_arch = "x86_64",
@@ -79,26 +79,11 @@ pub static DEFAULT_CONFIG: &'static str = r#"
 "#;
 
 // -------------------------------------------------------------------------------------------------
-// Error
-// -------------------------------------------------------------------------------------------------
-
-error_chain! {
-    links {
-        Colorize(crate::colorize::Error, crate::colorize::ErrorKind);
-    }
-    foreign_links {
-        Io(std::io::Error);
-        Toml(toml::de::Error);
-    }
-}
-
-// -------------------------------------------------------------------------------------------------
 // Functions
 // -------------------------------------------------------------------------------------------------
 
 fn get_reader_file(path: &Path) -> Result<Box<dyn BufRead>> {
-    let f =
-        File::open(path).chain_err(|| format!("failed to open '{}'", path.to_string_lossy()))?;
+    let f = File::open(path).context(format!("failed to open '{}'", path.to_string_lossy()))?;
     Ok(Box::new(BufReader::new(f)))
 }
 
@@ -194,9 +179,7 @@ fn output(
 // Main
 // -------------------------------------------------------------------------------------------------
 
-quick_main!(run);
-
-fn run() -> Result<()> {
+fn main() -> Result<()> {
     let opt = Opt::from_args();
     run_opt(&opt)
 }
@@ -210,11 +193,10 @@ fn run_opt(opt: &Opt) -> Result<()> {
                 eprintln!("pipecolor: Read config from '{}'", c.to_string_lossy());
             }
             let mut f =
-                File::open(&c).chain_err(|| format!("failed to open '{}'", c.to_string_lossy()))?;
+                File::open(&c).context(format!("failed to open '{}'", c.to_string_lossy()))?;
             let mut s = String::new();
             let _ = f.read_to_string(&mut s);
-            toml::from_str(&s)
-                .chain_err(|| format!("failed to parse toml '{}'", c.to_string_lossy()))?
+            toml::from_str(&s).context(format!("failed to parse toml '{}'", c.to_string_lossy()))?
         }
         None => toml::from_str(DEFAULT_CONFIG).unwrap(),
     };

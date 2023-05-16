@@ -1,4 +1,4 @@
-use error_chain::{bail, error_chain};
+use anyhow::{bail, Result};
 use regex::Regex;
 use serde_derive::Deserialize;
 use termion::color;
@@ -60,15 +60,6 @@ mod colors_serde {
         } else {
             Ok(s)
         }
-    }
-}
-
-// -------------------------------------------------------------------------------------------------
-// Error
-// -------------------------------------------------------------------------------------------------
-
-error_chain! {
-    foreign_links {
     }
 }
 
