@@ -21,6 +21,7 @@ pub struct Line {
     #[serde(with = "colors_serde")]
     pub colors: Vec<String>,
 
+    #[serde(default)]
     pub tokens: Vec<Token>,
 }
 
@@ -206,6 +207,12 @@ mod tests {
         tokens = []
     "#;
 
+    pub static TEST_CONFIG3: &'static str = r#"
+    [[lines]]
+        pat   = "A(.*) (.*) (.*) .*"
+        colors = ["xxx", "Blue", "Cyan", "Default"]
+    "#;
+
     #[test]
     fn test_colorize() {
         let config: Config = toml::from_str(TEST_CONFIG).unwrap();
@@ -235,8 +242,14 @@ mod tests {
         let config: Config = toml::from_str(TEST_CONFIG2).unwrap();
         let ret = colorize(String::from("A123 456 789 xyz"), &config);
         assert_eq!(
-            &format!("{:?}", ret)[0..50],
-            "Err(Error(Msg(\"failed to parse color name \'xxx\'\"),"
+            &format!("{:?}", ret)[0..37],
+            "Err(failed to parse color name \'xxx\')"
         );
+    }
+
+    #[test]
+    fn test_omit_token() {
+        let config = toml::from_str::<Config>(TEST_CONFIG3);
+        assert!(config.is_ok());
     }
 }
