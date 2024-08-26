@@ -14,6 +14,8 @@ You can customize the colorize rule by regular expression.
 
 ![demo](https://github.com/dalance/pipecolor/blob/master/sample/pipecolor.gif)
 
+This demonstration uses `./sample/demo.toml` configuration.
+
 ## Install
 Download from [release page](https://github.com/dalance/pipecolor/releases/latest), and extract to the directory in PATH.
 

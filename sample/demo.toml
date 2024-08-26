@@ -1,0 +1,72 @@
+[[lines]]
+    pat    = "(^Error:).*"
+    colors = ["Red", "LightRed"]
+    tokens = []
+[[lines]]
+    pat    = "(^Warning:).*"
+    colors = ["Yellow", "LightYellow"]
+    tokens = []
+[[lines]]
+    pat    = "(^Information:).*"
+    colors = ["Green", "LightGreen"]
+    tokens = []
+[[lines]]
+    pat    = "(^Info:).*"
+    colors = ["Green", "LightGreen"]
+    tokens = []
+[[lines]]
+    pat    = "^Verification (SUCCEEDED)"
+    colors = ["Green", "LightGreen"]
+    tokens = []
+[[lines]]
+    pat    = "^Verification (FAILED)"
+    colors = ["Red", "LightRed"]
+    tokens = []
+[[lines]]
+    pat    = "^(Error-\\[[^]]*\\]).*"
+    colors = ["Red", "LightRed"]
+    tokens = []
+[[lines]]
+    pat    = "^(Warning-\\[[^]]*\\]).*"
+    colors = ["Yellow", "LightYellow"]
+    tokens = []
+[[lines]]
+    pat    = "^(Lint-\\[[^]]*\\]).*"
+    colors = ["Green", "LightGreen"]
+    tokens = []
+[[lines]]
+    pat    = "^(ERROR: \\[[^]]*\\]).*"
+    colors = ["Red", "LightRed"]
+    tokens = []
+[[lines]]
+    pat    = "^(CRITICAL WARNING: \\[[^]]*\\]).*"
+    colors = ["Magenta", "LightMagenta"]
+    tokens = []
+[[lines]]
+    pat    = "^(WARNING: \\[[^]]*\\]).*"
+    colors = ["Yellow", "LightYellow"]
+    tokens = []
+[[lines]]
+    pat    = "^(INFO: \\[[^]]*\\]).*"
+    colors = ["Green", "LightGreen"]
+    tokens = []
+[[lines]]
+    pat    = "(^Error   :).*"
+    colors = ["Red", "LightRed"]
+    tokens = []
+[[lines]]
+    pat    = "(^Warning :).*"
+    colors = ["Yellow", "LightYellow"]
+    tokens = []
+[[lines]]
+    pat    = "(^Info    :).*"
+    colors = ["Green", "LightGreen"]
+    tokens = []
+[[lines]]
+    pat    = "(^\\*\\*ERROR: \\([^)]*\\):).*"
+    colors = ["Red", "LightRed"]
+    tokens = []
+[[lines]]
+    pat    = "(^\\*\\*WARN: \\([^)]*\\):).*"
+    colors = ["Yellow", "LightYellow"]
+    tokens = []
