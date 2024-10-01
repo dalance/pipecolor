@@ -3,7 +3,6 @@ A terminal filter to colorize output
 
 [![Actions Status](https://github.com/dalance/pipecolor/workflows/Regression/badge.svg)](https://github.com/dalance/pipecolor/actions)
 [![Crates.io](https://img.shields.io/crates/v/pipecolor.svg)](https://crates.io/crates/pipecolor)
-[![codecov](https://codecov.io/gh/dalance/pipecolor/branch/master/graph/badge.svg)](https://codecov.io/gh/dalance/pipecolor)
 
 ## Description
 
