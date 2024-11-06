@@ -23,7 +23,7 @@ serde             = "1"
 serde_derive      = "1"
 structopt         = "0.3"
 termion           = "4"
-timeout-readwrite = "0.3"
+timeout-readwrite = "0.4"
 toml              = "0.8"
 
 [target.x86_64-unknown-linux-gnu.dependencies]
