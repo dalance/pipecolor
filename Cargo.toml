@@ -16,7 +16,7 @@ codecov   = { repository = "dalance/pipecolor", branch = "master", service = "gi
 [dependencies]
 anyhow            = "1.0"
 atty              = "0.2"
-dirs              = "5"
+dirs              = "6"
 memchr            = "2"
 regex             = "1"
 serde             = "1"
