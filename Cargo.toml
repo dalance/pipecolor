@@ -24,7 +24,7 @@ serde_derive      = "1"
 structopt         = "0.3"
 termion           = "4"
 timeout-readwrite = "0.4"
-toml              = "0.9"
+toml              = "1.0"
 
 [target.x86_64-unknown-linux-gnu.dependencies]
 proc-reader = "0.5.1"
